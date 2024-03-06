@@ -1,5 +1,5 @@
 library(readr)
-library(RSQlite)
+library(RSQLite)
 
 customer_mock_data <- readr::read_csv("datasets/CUSTOMERS.csv")
 my_connection <- RSQLite::dbConnect(RSQLite::SQLite(),"database/ecommerce_databse.db")
