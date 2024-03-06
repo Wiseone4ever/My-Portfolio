@@ -34,7 +34,7 @@ jobs:
         run: |
           git config --global user.email "vignesh.parthasarathy@warwick.ac.uk"
           git config --global user.name "Vickyyyy98"
-        # git add --all figures/
+          git add --database/ecommerce_databse.db
       - name: Commit files
         run: |
           git commit -m "Mock Data Upload"
