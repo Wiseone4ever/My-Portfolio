@@ -34,12 +34,12 @@ jobs:
         run: |
           git config --global user.email "vignesh.parthasarathy@warwick.ac.uk"
           git config --global user.name "Vickyyyy98"
-          git add --database/ecommerce_databse.db
+          git add database/ecommerce_databse.db
       - name: Commit files
         run: |
           git commit -m "Mock Data Upload"
       - name: Push changes
         uses: ad-m/github-push-action@v0.6.0
         with:
-            github_token: ${{ secrets.TOKEN }}
+            github_token: ${{ secrets.GITHUB_TOKEN }}
             branch: main
