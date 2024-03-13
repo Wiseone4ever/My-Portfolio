@@ -1,0 +1,299 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r}
+library(readr)
+library(RSQLite)
+library(tibble) 
+library(dplyr) 
+library(lubridate)
+library(DBI)
+library(assertthat)
+library(purrr)
+```
+
+
+Part 1.2 - SQL Database Schema Creation 
+
+```{r}
+
+setwd("/cloud/project/")
+
+#connect to the SQLite database
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+
+
+dbExecute(my_connection, 
+                "CREATE TABLE IF NOT EXISTS CUSTOMERS
+                (customer_id VARCHAR(255) NOT NULL PRIMARY KEY,
+                    first_name VARCHAR(255) NOT NULL,
+                    last_name VARCHAR(255),
+                    username VARCHAR(255),
+                    gender TEXT,
+                    date_of_birth DATE NOT NULL,
+                    email VARCHAR(255) UNIQUE,
+                    phone VARCHAR(20) UNIQUE,
+                    street_name VARCHAR(255),
+                    city VARCHAR(255),
+                    country VARCHAR(255),
+                    postal_code VARCHAR(20),
+                    account_created_date TIMESTAMP,
+                    premium_subscription INTEGER);"
+          )
+
+dbExecute(my_connection, 
+                "CREATE TABLE IF NOT EXISTS PRODUCT_CATEGORY
+                (
+                    category_id VARCHAR(255) NOT NULL PRIMARY KEY,
+                    cat_name VARCHAR(255)
+                );"
+          )
+dbExecute(my_connection, 
+                "CREATE TABLE IF NOT EXISTS PRODUCTS
+                (
+                    product_id VARCHAR(255) NOT NULL PRIMARY KEY,
+                    product_name VARCHAR(255),
+                    price REAL,
+                    stock_quantity INTEGER NOT NULL,
+                    category_id VARCHAR(255) NOT NULL,
+                    supplier_id VARCHAR(255) NOT NULL,
+                    FOREIGN KEY(category_id) REFERENCES PRODUCT_CATEGORY(category_id),
+                    FOREIGN KEY(supplier_id) REFERENCES SUPPLIERS(supplier_id)
+                );"
+          )
+dbExecute(my_connection, 
+                "CREATE TABLE IF NOT EXISTS SUPPLIERS
+                (
+                    supplier_id VARCHAR(255) NOT NULL PRIMARY KEY,
+                    supplier_name VARCHAR(255),
+                    supplier_address VARCHAR(500),
+                    supplier_phone VARCHAR(20),
+                    supplier_email VARCHAR(255) UNIQUE
+                );"
+          )
+dbExecute(my_connection, 
+                "CREATE TABLE IF NOT EXISTS GIFT_CARD
+                (
+                gift_card_id VARCHAR(50) NOT NULL PRIMARY KEY,
+                gift_card_code VARCHAR(50),
+                detail INTEGER,
+                status VARCHAR(50)
+                );"
+          )
+dbExecute(my_connection, 
+                "CREATE TABLE IF NOT EXISTS ORDERS
+                (
+                    order_id VARCHAR(255) NOT NULL PRIMARY KEY,
+                    customer_id VARCHAR(255),
+                    product_id VARCHAR(255),
+                    shipment_id VARCHAR(255),
+                    gift_card_id VARCHAR(255), 
+                    payment_method TEXT,
+                    quantity INTEGER,
+                    order_timestamp TIMESTAMP,
+                    payment_timestamp TIMESTAMP,
+                    order_status VARCHAR(50) NOT NULL,
+                    amount REAL,
+                    FOREIGN KEY(customer_id) REFERENCES CUSTOMERS(customer_id),
+                    FOREIGN KEY(product_id) REFERENCES PRODUCTS(product_id),
+                    FOREIGN KEY(shipment_id) REFERENCES SHIPMENT(shipment_id), 
+                    FOREIGN KEY(gift_card_id) REFERENCES GIFT_CARD(gift_card_id) 
+                );"
+          )
+dbExecute(my_connection, 
+                "CREATE TABLE IF NOT EXISTS SHIPMENT
+                (
+                shipment_id VARCHAR(255) NOT NULL PRIMARY KEY,
+                order_id VARCHAR(255),
+                dispatch_timestamp DATETIME,
+                shipped_timestamp DATETIME,
+                status VARCHAR(50) NOT NULL,
+                FOREIGN KEY(order_id) REFERENCES ORDERS(order_id)
+                );"
+          )
+
+#Check if the tables are created
+
+dbGetQuery(my_connection, 
+    sprintf("SELECT name FROM sqlite_master WHERE type='table';")
+  )
+
+
+# dbDisconnect(my_connection)
+
+
+```
+
+#Generate Data
+
+```{r}
+
+customers_df <- readr::read_csv("datasets/CUSTOMERS.csv")
+products_df <- readr::read_csv("datasets/PRODUCTS.csv")
+gift_card_df <- readr::read_csv("datasets/GIFT_CARDS.csv")
+
+#Sample Customers
+
+sample_size <- floor(0.2 * nrow(products_df))
+sampled_product_ids <- sample(products_df$product_id, size = sample_size, replace = FALSE)
+sampled_products_df <- products_df[products_df$product_id %in% sampled_product_ids, ]
+
+
+#Sample Products
+
+sample_size <- floor(0.2 * nrow(customers_df))
+sampled_customer_ids <- sample(customers_df$customer_id, size = sample_size, replace = FALSE)
+sampled_customers_df <- customers_df[customers_df$customer_id %in% sampled_customer_ids, ]
+
+
+generate_orders_data <- function(n = 1000) {
+  set.seed(123) 
+  
+  orders_df <- tibble(
+    order_id = sprintf("%s-%04d", "ORD", 1:n),
+    customer_id = sample(sampled_customers_df$customer_id, n, replace = TRUE),
+    product_id = sample(sampled_products_df$product_id, n, replace = TRUE),
+    discount_id = sample(c(NA, gift_card_df$gift_card_id), n, replace = TRUE), # Assuming gift cards are used as discounts
+    payment_method = sample(c("Credit Card", "Debit Card", "PayPal", "Gift Card"), n, replace = TRUE),
+    quantity = sample(1:5, n, replace = TRUE),
+    order_timestamp = sample(seq(as.POSIXct('2024/02/01'), as.POSIXct('2024/02/29'), by="day"), n, replace = TRUE),
+    payment_timestamp = as.Date(order_timestamp + hours(sample(1:72, n, replace = TRUE))), # Payment within 1 to 72 hours after order
+    order_status = sample(c("Processing", "Shipped", "Delivered", "Cancelled","Pending Payment","Out for Delivery"), n, replace = TRUE),
+    amount = round(runif(n, 50, 500), 2) # Random amount between $50 and $500
+  )
+  
+  # Augment the orders data frame with supplier_id using left_join
+  orders_df <- orders_df %>%
+    left_join(sampled_products_df, by = "product_id") %>%
+    select(order_id,customer_id,product_id,discount_id,payment_method,quantity,order_timestamp,payment_timestamp,order_status,amount,supplier_id) 
+  
+  return(orders_df)
+}
+
+# Generate orders data
+orders_df <- generate_orders_data(n = 1000)
+
+generate_shipment_ids <- function(df) {
+  # Create a unique identifier for each group
+  df <- df %>% 
+    mutate(date_only = as.Date(order_timestamp)) %>% 
+    group_by(customer_id, supplier_id, date_only) %>%
+    mutate(shipment_group_id = cur_group_id()) %>%
+    ungroup() %>%
+    mutate(shipment_id = sprintf("SHIP%05d", shipment_group_id)) %>%
+    select(-shipment_group_id, -date_only) # Clean up the extra columns
+  
+  df
+}
+
+# Apply the function to your data frame
+orders_df <- generate_shipment_ids(orders_df)
+
+# Optional: Adjusting for logical consistency (e.g., cancelled orders should not have a shipment_id)
+  orders_df <- orders_df %>%
+    mutate(shipment_id = if_else(order_status %in% c("Cancelled","Pending Payment"), NA_character_,
+                                 as.character(shipment_id)),
+           payment_method = if_else(order_status == "Pending Payment",NA_character_,payment_method)) %>%
+    mutate(supplier_id = NULL)
+```
+
+
+```{r}
+#Shipment Table
+  
+  shipment_df <- orders_df %>%
+    mutate(
+      # Dispatch date could be the same as the order date or a day after
+      dispatch_timestamp = order_timestamp + days(sample(0:1, n(), replace = TRUE)),
+      
+      # Delivered date should be after the dispatch date; here I assume delivery takes between 2 to 5 days
+      delivered_timestamp = dispatch_timestamp + days(sample(2:5, n(), replace = TRUE)),
+      
+      # Randomly assign a delivery status
+      status = if_else(order_status == "Processing","Ready for Dispatch",if_else(order_status == "Shipped","In Transit",if_else(order_status == "Out for Delivery",order_status,if_else(order_status == "Delivered",order_status,"NA"))))
+    ) %>%
+    # Select only the relevant columns for the shipment table
+    select(shipment_id, dispatch_timestamp, delivered_timestamp, status) %>%
+    # Remove duplicate rows to ensure unique shipments
+    distinct() 
+
+  shipment_df <- na.omit(shipment_df)
+  
+  
+  shipment_df <- shipment_df %>%
+    mutate(
+      # Assign NA to dispatch_timestamp if status is 'Ready for Dispatch'
+      dispatch_timestamp = if_else(status == "Ready for Dispatch", NA_Date_, dispatch_timestamp),
+      delivered_timestamp = if_else(status == "Ready for Dispatch", NA_Date_, delivered_timestamp),
+      
+      # 'In Transit' status should have a dispatch date but no delivery date
+      dispatch_timestamp = if_else(status == "In Transit", Sys.Date() - days(sample(1:5, 1)), dispatch_timestamp),
+      delivered_timestamp = if_else(status == "In Transit", NA_Date_, delivered_timestamp),
+      
+      # 'In Transit' status should have a dispatch date but no delivery date
+      dispatch_timestamp = if_else(status == "Out for Delivery", Sys.Date() - days(sample(1:5, 1)), dispatch_timestamp),
+      delivered_timestamp = if_else(status == "Out for Delivery", NA_Date_, delivered_timestamp),
+      
+      # If status is 'Delivered', both dates should be in the past, with delivered after dispatched
+      dispatch_timestamp = if_else(status == "Delivered" & is.na(dispatch_timestamp), Sys.Date() - days(sample(6:10, 1)), dispatch_timestamp),
+      delivered_timestamp = if_else(status == "Delivered", dispatch_timestamp + days(sample(1:5, 1)), delivered_timestamp)
+    )
+  
+write_csv(orders_df,"datasets/order_df.csv")
+
+```
+
+
+```{r}
+
+validate_and_insert_row <- function(my_connection, row) {
+  row <- as.list(row)  # Ensure row is treated as a list
+  
+  # Convert date_of_birth and account_created_date formats, if necessary
+  row$date_of_birth <- as.Date(row$date_of_birth, format = "%Y-%m-%d")
+  row$account_created_date <- as.POSIXct(row$account_created_date, format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
+  
+  is_row_valid <- tryCatch({
+    assert_that(
+      !is.na(row$customer_id) && is.character(row$customer_id) && length(row$customer_id) == 1,
+      !is.na(row$first_name) && is.character(row$first_name) && length(row$first_name) == 1
+      # Include similar checks for other fields
+    )
+    TRUE
+  }, error = function(e) {
+    message("Validation failed for customer ID ", row$customer_id, ": ", e$message)
+    return(FALSE)
+  })
+  
+  # If row is valid, insert into database
+  if (is_row_valid) {
+    dbExecute(my_connection, 
+              sprintf("INSERT INTO CUSTOMERS (customer_id, first_name, last_name, username, gender, date_of_birth, email, phone, street_name, city, country, postal_code, account_created_date, premium_subscription)
+                       VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %d);",
+                      row$customer_id, row$first_name, row$last_name, row$username, row$gender, format(row$date_of_birth, "%Y-%m-%d"), row$email, row$phone, row$street_name, row$city, row$country, row$zip_code, format(row$account_created_date, "%Y-%m-%d %H:%M:%S"), row$premium_subscription))
+    message("Successfully inserted customer ID ", row$customer_id)
+    return(TRUE)
+  } else {
+    return(FALSE)
+  }
+}
+
+
+insert_customers <- function(my_connection, data) {
+  walk(1:nrow(data), ~validate_and_insert_row(my_connection, data[.x, ]))
+}
+
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+insert_customers(my_connection, customers_df)
+
+
+dbGetQuery(my_connection,"SELECT * FROM CUSTOMERS;")
+dbDisconnect(my_connection)
+
+```
+
+
