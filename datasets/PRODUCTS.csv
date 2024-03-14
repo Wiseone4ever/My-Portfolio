@@ -1,4 +1,4 @@
-﻿product_id,category_id,supplier_id,Product Name,Price,Quantity
+﻿product_id,category_id,supplier_id,product_name,price,stock_quantity
 5116-vjq-2956,01HQZSYXN9NDEKZ0KDTXG7GWAR,01HQZS3CHR3Z0C3RDD0QYFT566,Pampers Swaddlers Diapers,25,222
 6718-hlo-4759,01HQZSYXN9NDEKZ0KDTXG7GWAR,01HQZS3CHZ74ZQCSDXCS7CBVAC,Huggies Natural Care Baby Wipes,10,424
 2985-wrf-5782,01HQZSYXN9NDEKZ0KDTXG7GWAR,01HQZS3CHX81N7E24DA6H2H5DW,Similac Pro-Advance Infant Formula,30,229
