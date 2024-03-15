@@ -247,6 +247,9 @@ orders_df <- generate_shipment_ids(orders_df)
   
 write_csv(orders_df,"datasets/ORDERS.csv")
 
+write_csv(shipment_df,"datasets/SHIPMENTS.csv")
+
+
 ```
 
 Data Validation and Ingestion
@@ -444,10 +447,17 @@ ingest_suppliers(suppliers_df, my_connection)
 
 ```
 
+
 ```{r}
 my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
 dbGetQuery(my_connection,"SELECT * FROM SUPPLIERS;")
 ```
+
+```{r}
+#Test Abi
+```
+
+
 
 
 ```{r}
@@ -455,6 +465,9 @@ dbGetQuery(my_connection,"SELECT * FROM SUPPLIERS;")
 ```
 
 
+```{r}
+
+```
 
 1. Top 10 Products - Overall (Quantity)
 2. Top 5 Categories (Quantity)
