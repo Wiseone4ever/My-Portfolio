@@ -5,13 +5,7 @@ editor_options:
 ---
 
 
-```{r}
 
-```
-
-```{r}
-
-```
 
 
 ```{r}
@@ -518,6 +512,30 @@ ggplot(top_3_products, aes(x = reorder(product_name, total_amount), y = total_am
 
 
 5. Top 20 Average Spending across customers
-6. Most cancelled orders for which category
+6. Top 20 cancelled orders for which category
+```{r}
+# Join orders with products and then with categories to get category information
+orders_with_categories <- orders_df %>%
+  inner_join(products_df, by = "product_id") %>%
+  inner_join(category_df, by = "category_id")
+
+# Filter for cancelled orders and count by category
+cancelled_orders_by_category <- orders_with_categories %>%
+  filter(order_status == "Cancelled") %>%
+  count(cat_name) %>%
+  arrange(desc(n)) %>%
+  top_n(20, n)
+
+# Visualization
+ggplot(cancelled_orders_by_category, aes(x = reorder(cat_name, n), y = n, fill = cat_name)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Top 20 Cancelled Orders by Category",
+       x = "Category Name",
+       y = "Number of Cancelled Orders") +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
 7. Average number of orders across time
 8. Scatter plot for revenue across quantity; color by category
