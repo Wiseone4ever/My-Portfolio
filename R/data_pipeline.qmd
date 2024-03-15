@@ -5,6 +5,12 @@ editor_options:
 ---
 
 
+<<<<<<< HEAD
+=======
+
+
+
+>>>>>>> ada831676c3d57dd169bd906b3f4742b74da0632
 ```{r}
 library(readr)
 library(RSQLite)
@@ -93,7 +99,7 @@ dbExecute(my_connection,
                     order_id VARCHAR(255) NOT NULL PRIMARY KEY,
                     customer_id VARCHAR(255),
                     product_id VARCHAR(255),
-                    discount_id VARCHAR(255), 
+                    gift_card_id VARCHAR(255), 
                     payment_method TEXT,
                     quantity INTEGER,
                     order_timestamp TIMESTAMP,
@@ -110,11 +116,9 @@ dbExecute(my_connection,
                 "CREATE TABLE IF NOT EXISTS SHIPMENT
                 (
                 shipment_id VARCHAR(255) NOT NULL PRIMARY KEY,
-                order_id VARCHAR(255),
                 dispatch_timestamp DATETIME,
-                shipped_timestamp DATETIME,
-                status VARCHAR(50) NOT NULL,
-                FOREIGN KEY(order_id) REFERENCES ORDERS(order_id)
+                delivered_timestamp DATETIME,
+                status VARCHAR(50) NOT NULL
                 );"
           )
 
@@ -318,7 +322,7 @@ dbGetQuery(my_connection,"SELECT * FROM CUSTOMERS;")
 
 
 ```{r}
-dbExecute(my_connection,"DELETE FROM CUSTOMERS;")
+#dbExecute(my_connection,"DELETE FROM CUSTOMERS;")
 ```
 
 2. PRODUCT_CATEGORY 
@@ -453,7 +457,7 @@ ORDER
 ```{r}
 ingest_orders <- function(df, my_connection) {
   # Essential columns for validation
-  required_columns <- c("order_id", "order_status", "quantity", "amount")
+  required_columns <- c("order_id", "order_status", "quantity")
   df <- df[!rowSums(is.na(df[required_columns])) > 0, ]
   
   for(i in 1:nrow(df)) {
@@ -464,7 +468,7 @@ ingest_orders <- function(df, my_connection) {
       next
     }
 
-    # Data validation for quantity and amount
+    # Data validation for quantity
     if(!is.numeric(df$quantity[i]) || df$quantity[i] <= 0) {
       cat(sprintf("Skipping entry due to invalid quantity for order_id: %s\n", df$order_id[i]))
       next
@@ -472,7 +476,7 @@ ingest_orders <- function(df, my_connection) {
 
     # Insert validated data into the database
     insert_query <- sprintf("INSERT INTO ORDERS (order_id, customer_id, product_id, shipment_id, gift_card_id, payment_method, quantity, order_timestamp, payment_timestamp, order_status) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', '%s', '%s')",
-                            df$order_id[i], df$customer_id[i], df$product_id[i], df$shipment_id[i], df$gift_card_id[i], df$payment_method[i], df$quantity[i], df$order_timestamp[i], df$payment_timestamp[i], df$order_status[i], df$amount[i])
+                            df$order_id[i], df$customer_id[i], df$product_id[i], df$shipment_id[i], df$gift_card_id[i], df$payment_method[i], df$quantity[i], df$order_timestamp[i], df$payment_timestamp[i], df$order_status[i])
     tryCatch({
       dbExecute(my_connection, insert_query)
       cat(sprintf("Successfully inserted row: %d\n", i))
@@ -489,14 +493,10 @@ ingest_orders(orders_df, my_connection)
 
 ```
 
-```{r}
-summary(orders_df)
-```
-
 
 ```{r}
 my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
-dbGetQuery(my_connection,"SELECT * FROM SUPPLIERS;")
+dbGetQuery(my_connection,"SELECT * FROM ORDERS;")
 ```
 
 
@@ -504,9 +504,95 @@ dbGetQuery(my_connection,"SELECT * FROM SUPPLIERS;")
 #dbExecute(my_connection,"DELETE FROM SUPPLIERS;")
 ```
 
+GIFT CARDS
 
+```{r}
 
+ingest_gift_card_data <- function(df, my_connection) {
+  # Validate 'gift_card_id' and 'gift_card_code' for null values
+  required_columns <- c("gift_card_id", "gift_card_code", "status")
+  df <- df[!rowSums(is.na(df[required_columns])) > 0, ]
+  
+  # Ensure 'detail' is an integer
+  df$detail <- as.numeric(df$detail)
+  
+  # Insert validated data into the database
+  for(i in 1:nrow(df)){
+    # Check for duplicate records based on the primary key
+    existing_ids <- dbGetQuery(my_connection, sprintf("SELECT gift_card_id FROM GIFT_CARD WHERE gift_card_id = '%s'", df$gift_card_id[i]))
+    if(nrow(existing_ids) > 0) {
+      cat(sprintf("Skipping duplicate entry for gift_card_id: %s\n", df$gift_card_id[i]))
+      next
+    }
+    
+    insert_query <- sprintf("INSERT INTO GIFT_CARD (gift_card_id, gift_card_code, detail, status) VALUES ('%s', '%s', %f, '%s')",
+                            df$gift_card_id[i], df$gift_card_code[i], df$detail[i], df$status[i])
+    tryCatch({
+      dbExecute(my_connection, insert_query)
+      cat(sprintf("Successfully inserted row: %d\n", i))
+    }, error = function(e) {
+      cat(sprintf("Error in inserting row: %d, Error: %s\n", i, e$message))
+    })
+  }
+}
 
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+ingest_gift_card_data(gift_card_df, my_connection)
+```
+
+```{r}
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+dbGetQuery(my_connection,"SELECT * FROM GIFT_CARD;")
+```
+
+```{r}
+#dbExecute(my_connection,"DELETE FROM GIFT_CARD;")
+```
+
+SHIPMENTS
+
+```{r}
+ingest_shipment_data <- function(df, my_connection) {
+  # Validate 'shipment_id' and 'status' for null values
+  required_columns <- c("shipment_id", "status")
+  df <- df[!rowSums(is.na(df[required_columns])) > 0, ]
+  
+  # Convert timestamps to appropriate format
+ df$dispatch_timestamp <- ifelse(is.na(df$dispatch_timestamp), NA, as.Date(df$dispatch_timestamp))
+  df$delivered_timestamp <- ifelse(is.na(df$delivered_timestamp), NA, as.Date(df$delivered_timestamp))
+  
+  # Insert validated data into the database
+  for(i in 1:nrow(df)){
+    # Check for duplicate records based on the primary key
+    existing_ids <- dbGetQuery(my_connection, sprintf("SELECT shipment_id FROM SHIPMENT WHERE shipment_id = '%s'", df$shipment_id[i]))
+    if(nrow(existing_ids) > 0) {
+      cat(sprintf("Skipping duplicate entry for shipment_id: %s\n", df$shipment_id[i]))
+      next
+    }
+    
+    insert_query <- sprintf("INSERT INTO SHIPMENT (shipment_id, dispatch_timestamp, delivered_timestamp, status) VALUES ('%s', '%s', '%s', '%s')",
+                            df$shipment_id[i], df$dispatch_timestamp[i], df$delivered_timestamp[i], df$status[i])
+    tryCatch({
+      dbExecute(my_connection, insert_query)
+      cat(sprintf("Successfully inserted row: %d\n", i))
+    }, error = function(e) {
+      cat(sprintf("Error in inserting row: %d, Error: %s\n", i, e$message))
+    })
+  }
+}
+
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+ingest_shipment_data(shipment_df, my_connection)
+```
+
+```{r}
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+dbGetQuery(my_connection,"SELECT * FROM SHIPMENT;")
+```
+
+```{r}
+dbExecute(my_connection,"DELETE FROM SHIPMENT;")
+```
 1. Top 10 Products - Overall (Quantity)
 2. Top 5 Categories (Quantity)
 3. Top 3 Products across categories (Total Amount)
@@ -545,7 +631,34 @@ ggplot(top_3_products, aes(x = reorder(product_name, total_amount), y = total_am
 ```
 
 
+
+
+
 5. Top 20 Average Spending across customers
-6. Most cancelled orders for which category
+6. Top 20 cancelled orders for which category
+```{r}
+# Join orders with products and then with categories to get category information
+orders_with_categories <- orders_df %>%
+  inner_join(products_df, by = "product_id") %>%
+  inner_join(category_df, by = "category_id")
+
+# Filter for cancelled orders and count by category
+cancelled_orders_by_category <- orders_with_categories %>%
+  filter(order_status == "Cancelled") %>%
+  count(cat_name) %>%
+  arrange(desc(n)) %>%
+  top_n(20, n)
+
+# Visualization
+ggplot(cancelled_orders_by_category, aes(x = reorder(cat_name, n), y = n, fill = cat_name)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Top 20 Cancelled Orders by Category",
+       x = "Category Name",
+       y = "Number of Cancelled Orders") +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
 7. Average number of orders across time
 8. Scatter plot for revenue across quantity; color by category
