@@ -4,11 +4,7 @@ editor_options:
   chunk_output_type: console
 ---
 ```{r}
-<<<<<<< HEAD
-#Hello World
-=======
-hello friends
->>>>>>> 3d9da94e457f02270655e23a7d89600c013bc1d4
+
 ```
 
 
