@@ -3,6 +3,9 @@ output: html_document
 editor_options: 
   chunk_output_type: console
 ---
+```{r}
+hello friends
+```
 
 
 ```{r}
@@ -29,7 +32,8 @@ my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_datab
 
 dbExecute(my_connection, 
                 "CREATE TABLE IF NOT EXISTS CUSTOMERS
-                (customer_id VARCHAR(255) NOT NULL PRIMARY KEY,
+                (   
+                    customer_id VARCHAR(255) NOT NULL PRIMARY KEY,
                     first_name VARCHAR(255) NOT NULL,
                     last_name VARCHAR(255),
                     username VARCHAR(255),
@@ -42,7 +46,8 @@ dbExecute(my_connection,
                     country VARCHAR(255),
                     zip_code VARCHAR(20),
                     account_created_date TIMESTAMP,
-                    premium_subscription INTEGER);"
+                    premium_subscription INTEGER
+                );"
           )
 
 dbExecute(my_connection, 
@@ -159,7 +164,7 @@ generate_orders_data <- function(n = 1000) {
     order_id = sprintf("%s-%04d", "ORD", 1:n),
     customer_id = sample(sampled_customers_df$customer_id, n, replace = TRUE),
     product_id = sample(sampled_products_df$product_id, n, replace = TRUE),
-    discount_id = sample(c(NA, gift_card_df$gift_card_id), n, replace = TRUE), # Assuming gift cards are used as discounts
+    gift_card_id = sample(c(NA, gift_card_df$gift_card_id), n, replace = TRUE), # Assuming gift cards are used as discounts
     payment_method = sample(c("Credit Card", "Debit Card", "PayPal", "Gift Card"), n, replace = TRUE),
     quantity = sample(1:5, n, replace = TRUE),
     order_timestamp = sample(seq(as.POSIXct('2024/02/01'), as.POSIXct('2024/02/29'), by="day"), n, replace = TRUE),
@@ -171,7 +176,7 @@ generate_orders_data <- function(n = 1000) {
   # Augment the orders data frame with supplier_id using left_join
   orders_df <- orders_df %>%
     left_join(sampled_products_df %>% select(product_id, supplier_id), by = "product_id") %>%
-    select(order_id, customer_id, product_id, discount_id, payment_method, quantity, order_timestamp, payment_timestamp, order_status, amount, supplier_id)
+    select(order_id, customer_id, product_id, gift_card_id, payment_method, quantity, order_timestamp, payment_timestamp, order_status, amount, supplier_id)
   
   return(orders_df)
 }
@@ -316,7 +321,7 @@ dbGetQuery(my_connection,"SELECT * FROM CUSTOMERS;")
 
 
 ```{r}
-#dbExecute(my_connection,"DELETE FROM CUSTOMERS;")
+dbExecute(my_connection,"DELETE FROM CUSTOMERS;")
 ```
 
 2. PRODUCT_CATEGORY 
