@@ -6,15 +6,6 @@ editor_options:
 
 
 ```{r}
-
-```
-
-```{r}
-
-```
-
-
-```{r}
 library(readr)
 library(RSQLite)
 library(tibble) 
@@ -102,14 +93,13 @@ dbExecute(my_connection,
                     order_id VARCHAR(255) NOT NULL PRIMARY KEY,
                     customer_id VARCHAR(255),
                     product_id VARCHAR(255),
-                    shipment_id VARCHAR(255),
-                    gift_card_id VARCHAR(255), 
+                    discount_id VARCHAR(255), 
                     payment_method TEXT,
                     quantity INTEGER,
                     order_timestamp TIMESTAMP,
                     payment_timestamp TIMESTAMP,
                     order_status VARCHAR(50) NOT NULL,
-                    amount REAL,
+                    shipment_id VARCHAR(255),
                     FOREIGN KEY(customer_id) REFERENCES CUSTOMERS(customer_id),
                     FOREIGN KEY(product_id) REFERENCES PRODUCTS(product_id),
                     FOREIGN KEY(shipment_id) REFERENCES SHIPMENT(shipment_id), 
@@ -177,13 +167,13 @@ generate_orders_data <- function(n = 1000) {
     order_timestamp = sample(seq(as.POSIXct('2024/02/01'), as.POSIXct('2024/02/29'), by="day"), n, replace = TRUE),
     payment_timestamp = order_timestamp + hours(sample(1:72, n, replace = TRUE)), # Payment within 1 to 72 hours after order
     order_status = sample(c("Processing", "Shipped", "Delivered", "Cancelled","Pending Payment","Out for Delivery"), n, replace = TRUE),
-    amount = round(runif(n, 50, 500), 2) # Random amount between $50 and $500
+    #amount = round(runif(n, 50, 500), 2) # Random amount between $50 and $500
   )
   
   # Augment the orders data frame with supplier_id using left_join
   orders_df <- orders_df %>%
     left_join(sampled_products_df %>% select(product_id, supplier_id), by = "product_id") %>%
-    select(order_id, customer_id, product_id, gift_card_id, payment_method, quantity, order_timestamp, payment_timestamp, order_status, amount, supplier_id)
+    select(order_id, customer_id, product_id, gift_card_id, payment_method, quantity, order_timestamp, payment_timestamp, order_status, supplier_id)
   
   return(orders_df)
 }
@@ -380,11 +370,10 @@ dbGetQuery(my_connection,"SELECT * FROM PRODUCT_CATEGORY;")
 ```{r}
 ingest_products <- function(df, my_connection) {
   # Data type checks
-  df$price <- as.numeric(df$price)
-  df$stock_quantity <- as.integer(df$stock_quantity)
+  df$quantity <- as.integer(df$quantity)
   
   # Check for null values in NOT NULL columns
-  required_columns <- c("product_id", "stock_quantity", "category_id", "supplier_id")
+  required_columns <- c("order_id", "order_status", "quantity")
   df <- df[!rowSums(is.na(df[required_columns])) > 0, ]
   
   for(i in 1:nrow(df)){
@@ -459,17 +448,56 @@ ingest_suppliers(suppliers_df, my_connection)
 
 ```
 
+ORDER
+
+```{r}
+ingest_orders <- function(df, my_connection) {
+  # Essential columns for validation
+  required_columns <- c("order_id", "order_status", "quantity", "amount")
+  df <- df[!rowSums(is.na(df[required_columns])) > 0, ]
+  
+  for(i in 1:nrow(df)) {
+    # Check for duplicate order_id
+    existing_ids <- dbGetQuery(my_connection, sprintf("SELECT order_id FROM ORDERS WHERE order_id = '%s'", df$order_id[i]))
+    if(nrow(existing_ids) > 0) {
+      cat(sprintf("Skipping duplicate entry for order_id: %s\n", df$order_id[i]))
+      next
+    }
+
+    # Data validation for quantity and amount
+    if(!is.numeric(df$quantity[i]) || df$quantity[i] <= 0) {
+      cat(sprintf("Skipping entry due to invalid quantity for order_id: %s\n", df$order_id[i]))
+      next
+    }
+
+    # Insert validated data into the database
+    insert_query <- sprintf("INSERT INTO ORDERS (order_id, customer_id, product_id, shipment_id, gift_card_id, payment_method, quantity, order_timestamp, payment_timestamp, order_status) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', '%s', '%s')",
+                            df$order_id[i], df$customer_id[i], df$product_id[i], df$shipment_id[i], df$gift_card_id[i], df$payment_method[i], df$quantity[i], df$order_timestamp[i], df$payment_timestamp[i], df$order_status[i], df$amount[i])
+    tryCatch({
+      dbExecute(my_connection, insert_query)
+      cat(sprintf("Successfully inserted row: %d\n", i))
+    }, error = function(e) {
+      cat(sprintf("Error in inserting row: %d, Error: %s\n", i, e$message))
+    })
+  }
+}
+
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+# Assume orders_df is your DataFrame containing orders data
+ingest_orders(orders_df, my_connection)
+
+
+```
+
+```{r}
+summary(orders_df)
+```
+
 
 ```{r}
 my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
 dbGetQuery(my_connection,"SELECT * FROM SUPPLIERS;")
 ```
-
-```{r}
-#Test Abi
-```
-
-
 
 
 ```{r}
