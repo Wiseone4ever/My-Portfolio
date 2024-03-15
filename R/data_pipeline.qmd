@@ -464,14 +464,46 @@ dbGetQuery(my_connection,"SELECT * FROM SUPPLIERS;")
 ```
 
 
-```{r}
 
-```
 
 1. Top 10 Products - Overall (Quantity)
 2. Top 5 Categories (Quantity)
 3. Top 3 Products across categories (Total Amount)
 4. Average delivery time for orders across top 5 delivery suppliers
+```{r}
+# Join orders with products to get category information
+orders_with_category <- orders_df %>%
+  inner_join(products_df, by = "product_id")
+
+# Calculate total amount for each product
+product_amounts <- orders_with_category %>%
+  group_by(category_id, product_id, product_name) %>%
+  summarise(total_amount = sum(quantity * amount, na.rm = TRUE)) %>%
+  ungroup()
+
+# Join with category_df to get category names
+product_amounts_with_category_name <- product_amounts %>%
+  inner_join(category_df, by = "category_id")
+
+# Get overall top 3 products
+top_3_products <- product_amounts_with_category_name %>%
+  arrange(desc(total_amount)) %>%
+  slice_max(total_amount, n = 3) %>%
+  ungroup()
+
+# Plot using ggplot2
+ggplot(top_3_products, aes(x = reorder(product_name, total_amount), y = total_amount, fill = cat_name)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  coord_flip() +
+  labs(title = "Top 3 Products by Total Amount",
+       x = "Product Name",
+       y = "Total Amount") +
+  theme_minimal() +
+  theme(legend.title = element_text(size = 12),
+        legend.text = element_text(size = 10))
+```
+
+
 5. Top 20 Average Spending across customers
 6. Most cancelled orders for which category
 7. Average number of orders across time
