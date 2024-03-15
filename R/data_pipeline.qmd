@@ -20,6 +20,7 @@ library(purrr)
 ```
 
 
+
 Part 1.2 - SQL Database Schema Creation 
 
 ```{r}
@@ -457,6 +458,12 @@ ingest_suppliers(suppliers_df, my_connection)
 my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
 dbGetQuery(my_connection,"SELECT * FROM SUPPLIERS;")
 ```
+
+```{r}
+#Test Abi
+```
+
+
 
 
 ```{r}
