@@ -374,10 +374,10 @@ dbGetQuery(my_connection,"SELECT * FROM PRODUCT_CATEGORY;")
 ```{r}
 ingest_products <- function(df, my_connection) {
   # Data type checks
-  df$quantity <- as.integer(df$quantity)
+  df$stock_quantity <- as.integer(df$stock_quantity)
   
   # Check for null values in NOT NULL columns
-  required_columns <- c("order_id", "order_status", "quantity")
+  required_columns <- c("product_id", "stock_quantity", "category_id", "supplier_id")
   df <- df[!rowSums(is.na(df[required_columns])) > 0, ]
   
   for(i in 1:nrow(df)){
@@ -591,7 +591,7 @@ dbGetQuery(my_connection,"SELECT * FROM SHIPMENT;")
 ```
 
 ```{r}
-dbExecute(my_connection,"DELETE FROM SHIPMENT;")
+#dbExecute(my_connection,"DELETE FROM SHIPMENT;")
 ```
 1. Top 10 Products - Overall (Quantity)
 2. Top 5 Categories (Quantity)
