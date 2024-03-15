@@ -4,7 +4,11 @@ editor_options:
   chunk_output_type: console
 ---
 ```{r}
+<<<<<<< HEAD
 #Hello World
+=======
+hello friends
+>>>>>>> 3d9da94e457f02270655e23a7d89600c013bc1d4
 ```
 
 
@@ -458,6 +462,12 @@ ingest_suppliers(suppliers_df, my_connection)
 my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
 dbGetQuery(my_connection,"SELECT * FROM SUPPLIERS;")
 ```
+
+```{r}
+#Test Abi
+```
+
+
 
 
 ```{r}
