@@ -5,12 +5,6 @@ editor_options:
 ---
 
 
-<<<<<<< HEAD
-=======
-
-
-
->>>>>>> ada831676c3d57dd169bd906b3f4742b74da0632
 ```{r}
 library(readr)
 library(RSQLite)
@@ -23,8 +17,8 @@ library(purrr)
 ```
 
 
-
 Part 1.2 - SQL Database Schema Creation 
+
 
 ```{r}
 
@@ -61,6 +55,18 @@ dbExecute(my_connection,
                     cat_name VARCHAR(255)
                 );"
           )
+
+dbExecute(my_connection, 
+                "CREATE TABLE IF NOT EXISTS SUPPLIERS
+                (
+                    supplier_id VARCHAR(255) NOT NULL PRIMARY KEY,
+                    supplier_name VARCHAR(255),
+                    supplier_address VARCHAR(500),
+                    supplier_phone VARCHAR(20),
+                    supplier_email VARCHAR(255) UNIQUE
+                );"
+          )
+
 dbExecute(my_connection, 
                 "CREATE TABLE IF NOT EXISTS PRODUCTS
                 (
@@ -74,16 +80,7 @@ dbExecute(my_connection,
                     FOREIGN KEY(supplier_id) REFERENCES SUPPLIERS(supplier_id)
                 );"
           )
-dbExecute(my_connection, 
-                "CREATE TABLE IF NOT EXISTS SUPPLIERS
-                (
-                    supplier_id VARCHAR(255) NOT NULL PRIMARY KEY,
-                    supplier_name VARCHAR(255),
-                    supplier_address VARCHAR(500),
-                    supplier_phone VARCHAR(20),
-                    supplier_email VARCHAR(255) UNIQUE
-                );"
-          )
+
 dbExecute(my_connection, 
                 "CREATE TABLE IF NOT EXISTS GIFT_CARD
                 (
@@ -137,12 +134,20 @@ dbGetQuery(my_connection,
 #Generate Data
 
 ```{r}
+## Find all files matching the pattern
+customer_files <- list.files(path = "datasets",pattern = "CUSTOMERS.*\\.csv$",full.names = TRUE )
+category_files <- list.files(path = "datasets",pattern = "CATEGORY.*\\.csv$",full.names = TRUE )
+gift_card_files <- list.files(path = "datasets",pattern = "GIFT_CARDS.*\\.csv$",full.names = TRUE )
+suppliers_files <- list.files(path = "datasets",pattern = "SUPPLIERS.*\\.csv$",full.names = TRUE )
+products_files <- list.files(path = "datasets",pattern = "PRODUCTS.*\\.csv$",full.names = TRUE )
 
-customers_df <- readr::read_csv("datasets/CUSTOMERS.csv")
-products_df <- readr::read_csv("datasets/PRODUCTS.csv")
-gift_card_df <- readr::read_csv("datasets/GIFT_CARDS.csv")
-category_df <- readr::read_csv("datasets/CATEGORY.csv")
-suppliers_df <- readr::read_csv("datasets/SUPPLIERS.csv") 
+customers_df <- readr::read_csv(customer_files[1])
+gift_card_df <- readr::read_csv(gift_card_files[1])
+suppliers_df <- readr::read_csv(suppliers_files[1])
+category_df <- readr::read_csv(category_files[1]) 
+products_df <- readr::read_csv(products_files[1])
+
+
 
 #Sample Customers
 
@@ -263,8 +268,9 @@ Data Validation and Ingestion
 1.CUSTOMERS
 
 ```{r}
-ingest_customer_data <- function(df, my_connection) {
-
+ingest_customer_data <- function(df) {
+  
+  my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
   # Data validation
 
   #email check
@@ -300,7 +306,7 @@ ingest_customer_data <- function(df, my_connection) {
                             df$customer_id[i], df$first_name[i], df$last_name[i], df$username[i], df$gender[i], df$date_of_birth[i],
                             df$email[i], df$phone[i], df$street_name[i], df$city[i], df$country[i], df$zip_code[i], df$account_created_date[i], df$premium_subscription[i])
     tryCatch({
-  dbExecute(my_connection, insert_query)
+dbExecute(my_connection, insert_query)
   cat(sprintf("Successfully inserted row: %d\n", i))
 }, error = function(e) {
   cat(sprintf("Error in inserting row: %d, Error: %s\n", i, e$message))
@@ -310,8 +316,12 @@ ingest_customer_data <- function(df, my_connection) {
   # Close the database connection
   dbDisconnect(my_connection)
 }
-my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
-ingest_customer_data(customers_df, my_connection)
+
+for(file in customer_files) {
+  df <- readr::read_csv(file)
+  ingest_customer_data(df)
+  
+}
 
 ```
 
@@ -322,13 +332,16 @@ dbGetQuery(my_connection,"SELECT * FROM CUSTOMERS;")
 
 
 ```{r}
-#dbExecute(my_connection,"DELETE FROM CUSTOMERS;")
+dbExecute(my_connection,"DELETE FROM CUSTOMERS;")
 ```
 
 2. PRODUCT_CATEGORY 
 
 ```{r}
-ingest_product_category <- function(df, my_connection) {
+ingest_product_category <- function(df) {
+  
+  my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+
   # Check for null values in NOT NULL columns
   required_columns <- c("category_id", "cat_name")
   df <- df[!rowSums(is.na(df[required_columns])) > 0, ]
@@ -351,10 +364,16 @@ ingest_product_category <- function(df, my_connection) {
       cat(sprintf("Error in inserting row: %d, Error: %s\n", i, e$message))
     })
   }
+  
+    dbDisconnect(my_connection)
+
 }
 
-my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
-ingest_product_category(category_df, my_connection)
+for(file in category_files) {
+  
+  df <- readr::read_csv(file)
+  ingest_product_category(df)
+}
 
 ```
 
@@ -369,56 +388,13 @@ dbGetQuery(my_connection,"SELECT * FROM PRODUCT_CATEGORY;")
 #dbExecute(my_connection,"DELETE FROM PRODUCT_CATEGORY;")
 ```
 
-3.PRODUCTS
-
-```{r}
-ingest_products <- function(df, my_connection) {
-  # Data type checks
-  df$stock_quantity <- as.integer(df$stock_quantity)
-  
-  # Check for null values in NOT NULL columns
-  required_columns <- c("product_id", "stock_quantity", "category_id", "supplier_id")
-  df <- df[!rowSums(is.na(df[required_columns])) > 0, ]
-  
-  for(i in 1:nrow(df)){
-    # Check for duplicate records based on the primary key and foreign key constraints
-    existing_product_ids <- dbGetQuery(my_connection, sprintf("SELECT product_id FROM PRODUCTS WHERE product_id = '%s'", df$product_id[i]))
-    if(nrow(existing_product_ids) > 0) {
-      cat(sprintf("Skipping duplicate entry for product_id: %s\n", df$product_id[i]))
-      next
-    }
-    
-    # Construct and execute the insertion query
-    insert_query <- sprintf("INSERT INTO PRODUCTS (product_id, product_name, price, stock_quantity, category_id, supplier_id) VALUES ('%s', '%s', %f, %d, '%s', '%s')",
-                            df$product_id[i], df$product_name[i], df$price[i], df$stock_quantity[i], df$category_id[i], df$supplier_id[i])
-    tryCatch({
-      dbExecute(my_connection, insert_query)
-      cat(sprintf("Successfully inserted row: %d\n", i))
-    }, error = function(e) {
-      cat(sprintf("Error in inserting row: %d, Error: %s\n", i, e$message))
-    })
-  }
-}
-
-my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
-ingest_products(products_df, my_connection)
-```
-
-```{r}
-my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
-dbGetQuery(my_connection,"SELECT * FROM PRODUCTS;")
-```
-
-
-```{r}
-#dbExecute(my_connection,"DELETE FROM PRODUCTS;")
-```
-
-
 SUPPLIERS
 
 ```{r}
-ingest_suppliers <- function(df, my_connection) {
+ingest_suppliers <- function(df) {
+  
+  my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+
   # Email format validation
   valid_email <- grepl("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", df$supplier_email)
   df <- df[valid_email, ]
@@ -445,17 +421,135 @@ ingest_suppliers <- function(df, my_connection) {
     })
     
   }
+    dbDisconnect(my_connection)
+
 }
 
-my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
-ingest_suppliers(suppliers_df, my_connection)
+for(file in suppliers_files) {
+  
+  df <- readr::read_csv(file)
+  ingest_suppliers(df)
+  
+}
 
+```
+
+GIFT CARDS
+
+```{r}
+
+ingest_gift_card_data <- function(df) {
+  
+  my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+
+  # Validate 'gift_card_id' and 'gift_card_code' for null values
+  required_columns <- c("gift_card_id", "gift_card_code", "status")
+  df <- df[!rowSums(is.na(df[required_columns])) > 0, ]
+  
+  # Ensure 'detail' is an integer
+  df$detail <- as.numeric(df$detail)
+  
+  # Insert validated data into the database
+  for(i in 1:nrow(df)){
+    # Check for duplicate records based on the primary key
+    existing_ids <- dbGetQuery(my_connection, sprintf("SELECT gift_card_id FROM GIFT_CARD WHERE gift_card_id = '%s'", df$gift_card_id[i]))
+    if(nrow(existing_ids) > 0) {
+      cat(sprintf("Skipping duplicate entry for gift_card_id: %s\n", df$gift_card_id[i]))
+      next
+    }
+    
+    insert_query <- sprintf("INSERT INTO GIFT_CARD (gift_card_id, gift_card_code, detail, status) VALUES ('%s', '%s', %f, '%s')",
+                            df$gift_card_id[i], df$gift_card_code[i], df$detail[i], df$status[i])
+    tryCatch({
+      dbExecute(my_connection, insert_query)
+      cat(sprintf("Successfully inserted row: %d\n", i))
+    }, error = function(e) {
+      cat(sprintf("Error in inserting row: %d, Error: %s\n", i, e$message))
+    })
+  }
+    dbDisconnect(my_connection)
+
+}
+
+for(file in gift_card_files) {
+  
+  df <- readr::read_csv(file)
+  ingest_gift_card_data(df)
+  
+}
+
+```
+
+```{r}
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+dbGetQuery(my_connection,"SELECT * FROM GIFT_CARD;")
+```
+
+```{r}
+#dbExecute(my_connection,"DELETE FROM GIFT_CARD;")
+```
+
+PRODUCTS
+
+```{r}
+ingest_products <- function(df) {
+  
+  my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+  # Data type checks
+  df$stock_quantity <- as.integer(df$stock_quantity)
+  
+  # Check for null values in NOT NULL columns
+  required_columns <- c("product_id", "stock_quantity", "category_id", "supplier_id")
+  df <- df[!rowSums(is.na(df[required_columns])) > 0, ]
+  
+  for(i in 1:nrow(df)){
+    # Check for duplicate records based on the primary key and foreign key constraints
+    existing_product_ids <- dbGetQuery(my_connection, sprintf("SELECT product_id FROM PRODUCTS WHERE product_id = '%s'", df$product_id[i]))
+    if(nrow(existing_product_ids) > 0) {
+      cat(sprintf("Skipping duplicate entry for product_id: %s\n", df$product_id[i]))
+      next
+    }
+    
+    # Construct and execute the insertion query
+    insert_query <- sprintf("INSERT INTO PRODUCTS (product_id, product_name, price, stock_quantity, category_id, supplier_id) VALUES ('%s', '%s', %f, %d, '%s', '%s')",
+                            df$product_id[i], df$product_name[i], df$price[i], df$stock_quantity[i], df$category_id[i], df$supplier_id[i])
+    tryCatch({
+      dbExecute(my_connection, insert_query)
+      cat(sprintf("Successfully inserted row: %d\n", i))
+    }, error = function(e) {
+      cat(sprintf("Error in inserting row: %d, Error: %s\n", i, e$message))
+    })
+  }
+    dbDisconnect(my_connection)
+
+}
+
+for(file in products_files) {
+  
+  df <- readr::read_csv(file)
+  ingest_products(df)
+  
+}
+
+```
+
+```{r}
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+dbGetQuery(my_connection,"SELECT * FROM PRODUCTS;")
+```
+
+
+```{r}
+#dbExecute(my_connection,"DELETE FROM PRODUCTS;")
 ```
 
 ORDER
 
 ```{r}
-ingest_orders <- function(df, my_connection) {
+ingest_orders <- function(df) {
+  
+  my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+
   # Essential columns for validation
   required_columns <- c("order_id", "order_status", "quantity")
   df <- df[!rowSums(is.na(df[required_columns])) > 0, ]
@@ -484,11 +578,13 @@ ingest_orders <- function(df, my_connection) {
       cat(sprintf("Error in inserting row: %d, Error: %s\n", i, e$message))
     })
   }
+    dbDisconnect(my_connection)
+
 }
 
-my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+
 # Assume orders_df is your DataFrame containing orders data
-ingest_orders(orders_df, my_connection)
+ingest_orders(orders_df)
 
 
 ```
@@ -504,62 +600,19 @@ dbGetQuery(my_connection,"SELECT * FROM ORDERS;")
 #dbExecute(my_connection,"DELETE FROM SUPPLIERS;")
 ```
 
-GIFT CARDS
-
-```{r}
-
-ingest_gift_card_data <- function(df, my_connection) {
-  # Validate 'gift_card_id' and 'gift_card_code' for null values
-  required_columns <- c("gift_card_id", "gift_card_code", "status")
-  df <- df[!rowSums(is.na(df[required_columns])) > 0, ]
-  
-  # Ensure 'detail' is an integer
-  df$detail <- as.numeric(df$detail)
-  
-  # Insert validated data into the database
-  for(i in 1:nrow(df)){
-    # Check for duplicate records based on the primary key
-    existing_ids <- dbGetQuery(my_connection, sprintf("SELECT gift_card_id FROM GIFT_CARD WHERE gift_card_id = '%s'", df$gift_card_id[i]))
-    if(nrow(existing_ids) > 0) {
-      cat(sprintf("Skipping duplicate entry for gift_card_id: %s\n", df$gift_card_id[i]))
-      next
-    }
-    
-    insert_query <- sprintf("INSERT INTO GIFT_CARD (gift_card_id, gift_card_code, detail, status) VALUES ('%s', '%s', %f, '%s')",
-                            df$gift_card_id[i], df$gift_card_code[i], df$detail[i], df$status[i])
-    tryCatch({
-      dbExecute(my_connection, insert_query)
-      cat(sprintf("Successfully inserted row: %d\n", i))
-    }, error = function(e) {
-      cat(sprintf("Error in inserting row: %d, Error: %s\n", i, e$message))
-    })
-  }
-}
-
-my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
-ingest_gift_card_data(gift_card_df, my_connection)
-```
-
-```{r}
-my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
-dbGetQuery(my_connection,"SELECT * FROM GIFT_CARD;")
-```
-
-```{r}
-#dbExecute(my_connection,"DELETE FROM GIFT_CARD;")
-```
-
 SHIPMENTS
 
 ```{r}
-ingest_shipment_data <- function(df, my_connection) {
+ingest_shipment_data <- function(df) {
+  
+  my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
   # Validate 'shipment_id' and 'status' for null values
   required_columns <- c("shipment_id", "status")
   df <- df[!rowSums(is.na(df[required_columns])) > 0, ]
   
   # Convert timestamps to appropriate format
- df$dispatch_timestamp <- ifelse(is.na(df$dispatch_timestamp), NA, as.Date(df$dispatch_timestamp))
-  df$delivered_timestamp <- ifelse(is.na(df$delivered_timestamp), NA, as.Date(df$delivered_timestamp))
+ #df$dispatch_timestamp <- ifelse(is.na(df$dispatch_timestamp), "", df$dispatch_timestamp)
+  #df$delivered_timestamp <- ifelse(is.na(df$delivered_timestamp), "", df$delivered_timestamp)
   
   # Insert validated data into the database
   for(i in 1:nrow(df)){
@@ -579,10 +632,11 @@ ingest_shipment_data <- function(df, my_connection) {
       cat(sprintf("Error in inserting row: %d, Error: %s\n", i, e$message))
     })
   }
+    dbDisconnect(my_connection)
+
 }
 
-my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
-ingest_shipment_data(shipment_df, my_connection)
+ingest_shipment_data(shipment_df)
 ```
 
 ```{r}
@@ -591,7 +645,7 @@ dbGetQuery(my_connection,"SELECT * FROM SHIPMENT;")
 ```
 
 ```{r}
-#dbExecute(my_connection,"DELETE FROM SHIPMENT;")
+dbExecute(my_connection,"DELETE FROM SHIPMENT;")
 ```
 1. Top 10 Products - Overall (Quantity)
 2. Top 5 Categories (Quantity)
