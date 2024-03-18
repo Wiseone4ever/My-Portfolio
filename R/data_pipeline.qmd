@@ -297,6 +297,22 @@ write_csv(shipment_df,"datasets/SHIPMENTS.csv")
 
 Data Validation and Ingestion
 
+```{r}
+check_column_match <- function(df, expected_cols) {
+  # Check if all expected columns are present in the dataframe
+  missing_cols <- setdiff(expected_cols, names(df))
+
+  if (length(missing_cols) > 0) {
+    stop(sprintf("The dataframe is missing these columns expected by the SQL table: %s", 
+                 paste(missing_cols, collapse = ", ")))
+  }
+  
+  return(TRUE)
+}
+```
+
+
+
 1.CUSTOMERS
 
 ```{r}
@@ -305,7 +321,14 @@ ingest_customer_data <- function(df) {
   my_connection <- RSQLite::dbConnect(RSQLite::SQLite()
                                       , "database/ecommerce_database_v1.db")
   # Data validation
+  
+  expected_cols <- c("customer_id", "first_name", "last_name", "username", 
+                     "gender", "date_of_birth", "email", "phone", "street_name", 
+                     "city", "country", "zip_code", "account_created_date", 
+                     "premium_subscription")
 
+  if (!check_column_match(df, expected_cols)) return(FALSE)  
+  
   #email check
   valid_email <- grepl("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
                        , df$email)
@@ -348,15 +371,15 @@ ingest_customer_data <- function(df) {
     , df$street_name[i], df$city[i], df$country[i], df$zip_code[i]
     , df$account_created_date[i], df$premium_subscription[i])
     tryCatch({
-dbExecute(my_connection, insert_query)
-  cat(sprintf("Successfully inserted row: %d\n", i))
-}, error = function(e) {
-  cat(sprintf("Error in inserting row: %d, Error: %s\n", i, e$message))
-})
-  }
-
-  # Close the database connection
-  dbDisconnect(my_connection)
+    dbExecute(my_connection, insert_query)
+      cat(sprintf("Successfully inserted row: %d\n", i))
+    }, error = function(e) {
+      cat(sprintf("Error in inserting row: %d, Error: %s\n", i, e$message))
+    })
+      }
+    
+      # Close the database connection
+    dbDisconnect(my_connection)
 }
 
 for(file in customer_files) {
@@ -381,6 +404,9 @@ ingest_product_category <- function(df) {
   
   my_connection <- RSQLite::dbConnect(RSQLite::SQLite()
                                       , "database/ecommerce_database_v1.db")
+  
+  expected_cols <- c("category_id", "cat_name")
+  if (!check_column_match(df, expected_cols)) return(FALSE)  
 
   # Check for null values in NOT NULL columns
   required_columns <- c("category_id", "cat_name")
@@ -435,6 +461,11 @@ ingest_suppliers <- function(df) {
   
   my_connection <- RSQLite::dbConnect(RSQLite::SQLite()
                                       , "database/ecommerce_database_v1.db")
+  
+  expected_cols <- c("supplier_id", "supplier_name", "supplier_address", 
+                     "supplier_phone", "supplier_email")
+  if (!check_column_match(df, expected_cols)) return(FALSE)  
+  
 
   # Email format validation
   valid_email <- grepl("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
@@ -489,6 +520,9 @@ ingest_gift_card_data <- function(df) {
   
   my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
 
+  expected_cols <- c("gift_card_id", "gift_card_code", "detail", "status")
+  if (!check_column_match(df, expected_cols)) return(FALSE)  
+  
   # Validate 'gift_card_id' and 'gift_card_code' for null values
   required_columns <- c("gift_card_id", "gift_card_code", "status")
   df <- df[!rowSums(is.na(df[required_columns])) > 0, ]
@@ -538,6 +572,11 @@ PRODUCTS
 ingest_products <- function(df) {
   
   my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+  
+  expected_cols <- c("product_id", "product_name", "price", 
+                     "stock_quantity", "category_id", "supplier_id")
+  if (!check_column_match(df, expected_cols)) return(FALSE)  
+  
   # Data type checks
   df$stock_quantity <- as.integer(df$stock_quantity)
   
@@ -588,7 +627,12 @@ ORDER
 ingest_orders <- function(df) {
   
   my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
-
+  
+  expected_cols <- c("order_id", "customer_id", "product_id", "shipment_id", 
+                     "gift_card_id", "payment_method", "quantity", 
+                     "order_timestamp", "payment_timestamp", "order_status")
+  if (!check_column_match(df, expected_cols)) return(FALSE)  
+  
   # Essential columns for validation
   required_columns <- c("order_id", "order_status", "quantity")
   df <- df[!rowSums(is.na(df[required_columns])) > 0, ]
@@ -641,6 +685,11 @@ SHIPMENTS
 ingest_shipment_data <- function(df) {
   
   my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+  
+  expected_cols <- c("shipment_id", "dispatch_timestamp", 
+                     "delivered_timestamp", "status")
+  if (!check_column_match(df, expected_cols)) return(FALSE)  
+  
   # Validate 'shipment_id' and 'status' for null values
   required_columns <- c("shipment_id", "status")
   df <- df[!rowSums(is.na(df[required_columns])) > 0, ]
