@@ -11,13 +11,9 @@ library(RSQLite)
 library(tibble) 
 library(dplyr) 
 library(lubridate)
-#library(ggplot2)
+library(ggplot2)
 library(DBI)
-<<<<<<< HEAD
-=======
-install.packages("tidyr")
 library(tidyr)
->>>>>>> 46765e8cb93cab5265f586b9916d2851c53c6a65
 ```
 
 
@@ -716,11 +712,8 @@ ggplot(top_3_products, aes(x = reorder(product_name, total_amount), y = total_am
         legend.text = element_text(size = 10))
 ```
 
-<<<<<<< HEAD
 
-=======
 4. Average delivery time for orders across top 5 delivery suppliers
->>>>>>> d065673478773d9575d62ba440477f02d2d07c48
 
 5. Top 20 Average Spending across customers
 6. Top 20 cancelled orders for which category
@@ -733,20 +726,13 @@ my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_datab
 dbGetQuery(my_connection,"SELECT * FROM SHIPMENT;")
 ```
 
-<<<<<<< HEAD
-=======
-7. Average number of orders across time
-8. Scatter plot for revenue across quantity; color by category
+
 
 Foreign Key Check
 ORDERS
 customer_id check
 ```{r}
-<<<<<<< HEAD
-query_1 <- "
-WITH product AS (
-           SELECT 
-=======
+
 dbGetQuery(my_connection,
            "SELECT 
               DISTINCT o.customer_id as customer_id,
@@ -821,16 +807,12 @@ dbGetQuery(my_connection,
 ```
 
 
->>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
-
 SQL version
 
 1. Top 10 Products - Overall (Quantity)
 ```{r}
 # Define the SQL query
-query_1 <- dbGetQuery(my_connection,
-           "SELECT 
->>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
+query_1 <-   "with product as (SELECT 
               ORDERS.product_id,
               product_name,
               count(quantity) as total_purchase
@@ -839,11 +821,8 @@ query_1 <- dbGetQuery(my_connection,
            WHERE lower(order_status) in ('shipped','delivered')
            GROUP BY ORDERS.product_id,product_name
            ORDER BY total_purchase desc
-           LIMIT 10
-<<<<<<< HEAD
-           
-)
-SELECT*FROM product
+           LIMIT 10;)
+SELECT * FROM product;
 "
 ```
 
@@ -852,9 +831,7 @@ SELECT*FROM product
 top_10_products <- dbGetQuery(my_connection, query_1)
 
 ggplot(top_10_products,aes(x=product_name,y=total_purchase, fill=product_name))+geom_bar(stat="identity")+labs(x="Product Name", y="Total Number of Purchase")+coord_flip()
-
-=======
-           ;")
+           
 
 # Visualize the result using ggplot2
 ggplot(query_1, aes(x = reorder(product_name, total_amount), y = total_amount, fill = cat_name)) +
@@ -866,12 +843,12 @@ ggplot(query_1, aes(x = reorder(product_name, total_amount), y = total_amount, f
   theme_minimal() +
   theme(legend.title = element_text(size = 12),
         legend.text = element_text(size = 10))
->>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
 ```
 
 
 2. Top 5 Categories (Quantity)
 ```{r}
+
 # SQL query to fetch top 5 categories by quantity
 query_2 <- dbGetQuery(my_connection,
            "SELECT 
@@ -963,7 +940,6 @@ ggplot(query_3, aes(x = reorder(product_name, total_amount), y = total_amount, f
 
 4. Average delivery time for orders across top 5 delivery suppliers
 ```{r}
-<<<<<<< HEAD
 # Define the SQL query for average delivery time for orders across top 5 delivery suppliers
 query_4 <- dbGetQuery(my_connection,
            "SELECT 
@@ -983,10 +959,9 @@ query_4 <- dbGetQuery(my_connection,
 ggplot(query_4, aes(x = reorder(supplier_name, average_delivery_time), y = average_delivery_time, fill = supplier_name)) +
   geom_bar(stat = "identity") +
   coord_flip() +
-  labs(title = "Average Delivery Time for Delivery Suppliers",
-=======
-query_4 <- "
-SELECT
+  labs(title = "Average Delivery Time for Delivery Suppliers")
+
+query_4 <- "SELECT
     sup.supplier_name AS supplier_name,
     AVG(julianday(s.delivered_timestamp) - julianday(s.dispatch_timestamp)) AS average_delivery_time
 FROM SHIPMENT AS s
@@ -1009,7 +984,6 @@ ggplot(top_delivery_df, aes(x = reorder(supplier_name, average_delivery_time), y
   geom_bar(stat = "identity") +
   coord_flip() +
   labs(title = "Average Delivery Time for Top 5 Delivery Suppliers",
->>>>>>> e4cbaa3f596b2def96caf11c8ec3ca07379740e7
        x = "Supplier Name",
        y = "Average Delivery Time (Days)") +
   theme_minimal() +
@@ -1019,7 +993,6 @@ ggplot(top_delivery_df, aes(x = reorder(supplier_name, average_delivery_time), y
 5. Top 20 Average Spending across customers
 ```{r}
 # Define the SQL query
-<<<<<<< HEAD
 query_5 <- dbGetQuery(my_connection,
            "SELECT
               o.customer_id as customer_id,
@@ -1034,7 +1007,6 @@ query_5 <- dbGetQuery(my_connection,
             ORDER BY avg_amount DESC
             limit 20
            ;")
-=======
 query_5 <- "
 SELECT
     o.customer_id as customer_id,
@@ -1053,7 +1025,6 @@ LIMIT 20
 ```{r}
 # Execute the query and store the result in a data frame
 avg_spending_df <- dbGetQuery(my_connection, query_5)
->>>>>>> e4cbaa3f596b2def96caf11c8ec3ca07379740e7
 
 # Plot using ggplot2
 ggplot(avg_spending_df, aes(x = reorder(customer_name, avg_amount), y = avg_amount, fill = customer_name)) +
