@@ -235,7 +235,11 @@ orders_df <- generate_shipment_ids(orders_df)
                                     ,NA_character_,payment_method),
            gift_card_id = if_else(payment_method == "Gift Card",gift_card_id,NA_character_)) %>%
     mutate(supplier_id = NULL)
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> e0aedb5134cb8522e4d46a7f147e9d8c6f8bf022
 used_gift_cards <- unique(na.omit(orders_df$gift_card_id))
 gift_card_df$status[gift_card_df$gift_card_id %in% used_gift_cards] <- 'USED'
 ```
