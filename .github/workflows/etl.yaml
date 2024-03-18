@@ -27,9 +27,13 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
           Rscript -e 'install.packages(c("ggplot2","dplyr","readr","RSQLite","lubridate"))'
+      - name: Install Quarto
+        run: |
+          curl -LO https://github.com/quarto-dev/quarto-cli/releases/latest/download/quarto-linux-amd64.deb
+          sudo dpkg -i quarto-linux-amd64.deb
       - name: Execute R script
         run: |
-          Rscript R/load_data.R
+         Rscript R/load_data.R
       - name: Add files
         run: |
           git config --global user.email "vignesh.parthasarathy@warwick.ac.uk"
@@ -43,3 +47,4 @@ jobs:
         with:
             github_token: ${{ secrets.GITHUB_TOKEN }}
             branch: main
+

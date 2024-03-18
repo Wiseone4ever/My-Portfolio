@@ -14,6 +14,9 @@ library(lubridate)
 library(DBI)
 library(assertthat)
 library(purrr)
+library(ggplot2)
+library(RSQLite)
+library(DBI)
 ```
 
 
@@ -627,7 +630,6 @@ dbGetQuery(my_connection,"SELECT * FROM SHIPMENT;")
 1. Top 10 Products - Overall (Quantity)
 2. Top 5 Categories (Quantity)
 3. Top 3 Products across categories (Total Amount)
-4. Average delivery time for orders across top 5 delivery suppliers
 ```{r}
 # Join orders with products to get category information
 orders_with_category <- orders_df %>%
@@ -636,7 +638,7 @@ orders_with_category <- orders_df %>%
 # Calculate total amount for each product
 product_amounts <- orders_with_category %>%
   group_by(category_id, product_id, product_name) %>%
-  summarise(total_amount = sum(quantity * amount, na.rm = TRUE)) %>%
+  summarise(total_amount = sum(quantity * price, na.rm = TRUE)) %>%
   ungroup()
 
 # Join with category_df to get category names
@@ -661,7 +663,11 @@ ggplot(top_3_products, aes(x = reorder(product_name, total_amount), y = total_am
         legend.text = element_text(size = 10))
 ```
 
+<<<<<<< HEAD
 
+=======
+4. Average delivery time for orders across top 5 delivery suppliers
+>>>>>>> d065673478773d9575d62ba440477f02d2d07c48
 5. Top 20 Average Spending across customers
 6. Top 20 cancelled orders for which category
 ```{r}
@@ -690,3 +696,162 @@ ggplot(cancelled_orders_by_category, aes(x = reorder(cat_name, n), y = n, fill =
 
 7. Average number of orders across time
 8. Scatter plot for revenue across quantity; color by category
+
+SQL version
+1. Top 10 Products - Overall (Quantity)
+```{r}
+dbGetQuery(my_connection,
+           "SELECT 
+              ORDERS.product_id,
+              product_name,
+              count(quantity) as total_purchase
+           FROM ORDERS
+           JOIN PRODUCTS ON ORDERS.product_id = PRODUCTS.product_id
+           WHERE lower(order_status) in ('shipped','delivered')
+           GROUP BY ORDERS.product_id,product_name
+           ORDER BY total_purchase desc
+           LIMIT 10
+           ;")
+```
+
+2. Top 5 Categories (Quantity)
+```{r}
+dbGetQuery(my_connection,
+           "SELECT 
+              cat_name as category,
+              count(quantity) as total_purchase
+           FROM ORDERS
+           JOIN PRODUCTS ON ORDERS.product_id = PRODUCTS.product_id
+           JOIN PRODUCT_CATEGORY ON PRODUCTS.category_id = PRODUCT_CATEGORY.category_id
+           WHERE lower(order_status) in ('shipped','delivered')
+           GROUP BY cat_name
+           ORDER by total_purchase desc
+           LIMIT 5
+           ;")
+```
+
+3. Top 3 Products across categories (Total Amount)
+```{r}
+dbGetQuery(my_connection,
+           "WITH product AS (
+              SELECT
+                p.product_id,
+                pc.cat_name,
+                p.product_name
+              FROM PRODUCTS as p
+              JOIN PRODUCT_CATEGORY as pc ON pc.category_id = p.category_id
+            ),
+            order_amount AS (
+              SELECT
+                o.product_id AS product_id,
+                SUM(o.quantity * p.price) AS total_amount
+              FROM ORDERS as o
+              JOIN PRODUCTS as p ON o.product_id = p.product_id
+              WHERE LOWER(o.order_status) IN ('shipped', 'delivered')
+              GROUP BY o.product_id
+            ),
+            rnk AS (
+              SELECT
+                pr.cat_name,
+                pr.product_name,
+                oa.total_amount,
+                ROW_NUMBER() OVER (PARTITION BY pr.cat_name ORDER BY oa.total_amount DESC) AS rnk
+              FROM order_amount as oa
+              JOIN product as pr ON oa.product_id = pr.product_id
+            )
+            SELECT
+              cat_name,
+              product_name,
+              total_amount
+            FROM rnk
+            WHERE rnk IN (1,2,3);")
+```
+
+4. Average delivery time for orders across top 5 delivery suppliers
+```{r}
+dbGetQuery(my_connection,
+           "SELECT 
+               sup.supplier_id,
+               sup.supplier_name AS supplier_name,
+               AVG(julianday(s.delivered_timestamp) - julianday(s.dispatch_timestamp)) AS delivery_time
+           FROM SHIPMENT AS s
+           JOIN ORDERS AS o ON o.shipment_id = s.shipment_id
+           JOIN PRODUCTS AS p ON p.product_id = o.product_id
+           JOIN SUPPLIERS AS sup ON sup.supplier_id = p.supplier_id  -- Adjusted this line
+           WHERE LOWER(s.status) = 'delivered'
+           GROUP BY sup.supplier_id, sup.supplier_name
+           ORDER BY delivery_time DESC, supplier_name
+           LIMIT 5;")
+```
+
+5. Top 20 Average Spending across customers
+```{r}
+dbGetQuery(my_connection,
+           "SELECT
+              o.customer_id as customer_id,
+              c.first_name ||' '|| c.last_name as customer_name,
+              AVG(p.price*o.quantity) as avg_amount,
+              SUM(p.price*o.quantity) as total_amount
+            FROM ORDERS as o
+            JOIN CUSTOMERS as c ON o.customer_id = c.customer_id
+            JOIN PRODUCTS as p ON p.product_id = o.product_id
+            WHERE LOWER(o.order_status) IN ('shipped', 'delivered')
+            GROUP BY o.customer_id,customer_name
+            ORDER BY avg_amount DESC
+            limit 20
+           ;")
+```
+
+6. Top 20 cancelled orders for which category
+```{r}
+dbGetQuery(my_connection,
+           "SELECT
+              cat_name,
+              COUNT(o.quantity) as total_cancelled
+            FROM ORDERS as o
+            JOIN PRODUCTS as p ON p.product_id = o.product_id
+            JOIN PRODUCT_CATEGORY as pc on pc.category_id = p.category_id
+            WHERE LOWER(order_status) = 'cancelled'
+            GROUP BY cat_name
+            ORDER BY total_cancelled DESC
+           ;")
+```
+
+7. Average number of orders across time
+```{r}
+dbGetQuery(my_connection,
+           "SELECT
+              order_timestamp as date,
+              SUM(o.quantity) as total_order
+            FROM ORDERS as o
+            WHERE LOWER(order_status) IN ('shipped', 'delivered')
+            GROUP BY order_timestamp
+            ORDER BY date
+           ;")
+```
+
+8. Scatter plot for revenue across quantity; color by category
+```{r}
+revenue_quantity <- dbGetQuery(my_connection,
+           "SELECT
+              cat_name,
+              SUM(o.quantity) as quantity,
+              SUM(p.price * o.quantity) as amount
+            FROM ORDERS as o
+            JOIN PRODUCTS as p ON p.product_id = o.product_id
+            JOIN PRODUCT_CATEGORY as pc on pc.category_id = p.category_id
+            WHERE LOWER(order_status) IN ('shipped', 'delivered')
+            GROUP BY cat_name
+           ;")
+
+ggplot(revenue_quantity, aes(x = quantity, y = amount, color = cat_name)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Scatter Plot of Quantity vs Amount by Category",
+       x = "Quantity",
+       y = "Amount") +
+  theme(legend.position = "right")
+```
+
+
+
