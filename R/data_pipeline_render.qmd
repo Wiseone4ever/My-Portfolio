@@ -239,8 +239,12 @@ orders_df <- generate_shipment_ids(orders_df)
                               c("Cancelled","Pending Payment"), NA_character_,
                                  as.character(shipment_id)),
            payment_method = if_else(order_status == "Pending Payment"
-                                    ,NA_character_,payment_method)) %>%
+                                    ,NA_character_,payment_method),           
+           gift_card_id = if_else(payment_method == "Gift Card",gift_card_id,NA_character_)) %>%
     mutate(supplier_id = NULL)
+
+used_gift_cards <- unique(na.omit(orders_df$gift_card_id))
+gift_card_df$status[gift_card_df$gift_card_id %in% used_gift_cards] <- 'USED'
 ```
 
 
@@ -1059,11 +1063,11 @@ query_7 <- dbGetQuery(my_connection,
 ```
 
 ```{r}
-ggplot(query_7,aes(x=date,y=total_order,group=1))
-      +geom_point(stat="identity")
-      +geom_line(stat="identity")
-      +labs(x="Date",y="Total Number of Order")
-        +theme(axis.text.x=element_text(angle=35))
+ggplot(query_7,aes(x=date,y=total_order,group=1)) +
+      geom_point(stat="identity") +
+      geom_line(stat="identity") +
+      labs(x="Date",y="Total Number of Order") +
+        theme(axis.text.x=element_text(angle=35))
 ```
 
 8. Scatter plot for revenue across quantity; color by category
