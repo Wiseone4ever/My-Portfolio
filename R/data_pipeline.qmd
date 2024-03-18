@@ -232,8 +232,12 @@ orders_df <- generate_shipment_ids(orders_df)
                                    c("Cancelled","Pending Payment")
                                  , NA_character_,as.character(shipment_id)),
            payment_method = if_else(order_status == "Pending Payment"
-                                    ,NA_character_,payment_method)) %>%
+                                    ,NA_character_,payment_method),
+           gift_card_id = if_else(payment_method == "Gift Card",gift_card_id,NA_character_)) %>%
     mutate(supplier_id = NULL)
+  
+used_gift_cards <- unique(na.omit(orders_df$gift_card_id))
+gift_card_df$status[gift_card_df$gift_card_id %in% used_gift_cards] <- 'USED'
 ```
 
 
@@ -729,16 +733,6 @@ my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_datab
 dbGetQuery(my_connection,"SELECT * FROM SHIPMENT;")
 ```
 
-1. Top 10 Products - Overall (Quantity)
-2. Top 5 Categories (Quantity)
-3. Top 3 Products across categories (Total Amount)
-4. Average delivery time for orders across top 5 delivery suppliers
-5. Top 20 Average Spending across customers
-6. Top 20 cancelled orders for which category
-7. Average number of orders across time
-8. Scatter plot for revenue across quantity; color by category
-
-
 Foreign Key Check
 ORDERS
 customer_id check
@@ -882,19 +876,39 @@ ggplot(query_2, aes(x = reorder(category, total_purchase), y = total_purchase, f
 3. Top 3 Products across categories (Total Amount)
 
 ```{r}
-
 query_3 <- dbGetQuery(my_connection,
-"SELECT
-    pc.cat_name,
-    p.product_name,
-    SUM(o.quantity * p.price) AS total_amount
-FROM ORDERS as o
-JOIN PRODUCTS as p ON o.product_id = p.product_id
-JOIN PRODUCT_CATEGORY as pc ON pc.category_id = p.category_id
-WHERE LOWER(o.order_status) IN ('shipped', 'delivered')
-GROUP BY p.product_id, pc.cat_name, p.product_name
-ORDER BY total_amount DESC
-LIMIT 3;")
+           "WITH product AS (
+              SELECT
+                p.product_id,
+                pc.cat_name,
+                p.product_name
+              FROM PRODUCTS as p
+              JOIN PRODUCT_CATEGORY as pc ON pc.category_id = p.category_id
+            ),
+            order_amount AS (
+              SELECT
+                o.product_id AS product_id,
+                SUM(o.quantity * p.price) AS total_amount
+              FROM ORDERS as o
+              JOIN PRODUCTS as p ON o.product_id = p.product_id
+              WHERE LOWER(o.order_status) IN ('shipped', 'delivered')
+              GROUP BY o.product_id
+            ),
+            rnk AS (
+              SELECT
+                pr.cat_name,
+                pr.product_name,
+                oa.total_amount,
+                ROW_NUMBER() OVER (PARTITION BY pr.cat_name ORDER BY oa.total_amount DESC) AS rnk
+              FROM order_amount as oa
+              JOIN product as pr ON oa.product_id = pr.product_id
+            )
+            SELECT
+              cat_name,
+              product_name,
+              total_amount
+            FROM rnk
+            WHERE rnk IN (1,2,3);")
 
 ggplot(query_3, aes(x = reorder(product_name, total_amount), y = total_amount, fill = cat_name)) +
   geom_bar(stat = "identity", position = position_dodge()) +
@@ -1011,11 +1025,8 @@ query_7 <- dbGetQuery(my_connection,
             ORDER BY date
            ;")
 
-ggplot(query_7,aes(x=date,y=total_order,group=1))
-      +geom_point(stat="identity")
-      +geom_line(stat="identity")
-      +labs(x="Date",y="Total Number of Order")
-        +theme(axis.text.x=element_text(angle=35))
+ggplot(query_7,aes(x=date,y=total_order,group=1))+geom_point(stat="identity")+geom_line(stat="identity")+labs(x="Date",y="Total Number of Order")+theme(axis.text.x=element_text(angle=35))
+
 ```
 
 8. Scatter plot for revenue across quantity; color by category
