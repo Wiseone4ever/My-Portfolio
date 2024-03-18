@@ -701,76 +701,84 @@ ggplot(cancelled_orders_by_category, aes(x = reorder(cat_name, n), y = n, fill =
 SQL version
 1. Top 10 Products - Overall (Quantity)
 ```{r}
-
-dbGetQuery(my_connection,
-           "SELECT 
-              ORDERS.product_id,
-              product_name,
-              count(quantity) as total_purchase
-           FROM ORDERS
-           JOIN PRODUCTS ON ORDERS.product_id = PRODUCTS.product_id
-           WHERE lower(order_status) in ('shipped','delivered')
-           GROUP BY ORDERS.product_id,product_name
-           ORDER BY total_purchase desc
-           LIMIT 10
-           ;")
-```
-
-2. Top 5 Categories (Quantity)
-```{r}
-
-dbGetQuery(my_connection,
-           "SELECT 
-              cat_name as category,
-              count(quantity) as total_purchase
-           FROM ORDERS
-           JOIN PRODUCTS ON ORDERS.product_id = PRODUCTS.product_id
-           JOIN PRODUCT_CATEGORY ON PRODUCTS.category_id = PRODUCT_CATEGORY.category_id
-           WHERE lower(order_status) in ('shipped','delivered')
-           GROUP BY cat_name
-           ORDER by total_purchase desc
-           LIMIT 5
-           ;")
+# Define the SQL query
+query <- "
+WITH product AS (
+    SELECT
+        p.product_id,
+        pc.cat_name,
+        p.product_name
+    FROM PRODUCTS as p
+    JOIN PRODUCT_CATEGORY as pc ON pc.category_id = p.category_id
+),
+order_amount AS (
+    SELECT
+        o.product_id AS product_id,
+        SUM(o.quantity * p.price) AS total_amount
+    FROM ORDERS as o
+    JOIN PRODUCTS as p ON o.product_id = p.product_id
+    WHERE LOWER(o.order_status) IN ('shipped', 'delivered')
+    GROUP BY o.product_id
+),
+rnk AS (
+    SELECT
+        pr.cat_name,
+        pr.product_name,
+        oa.total_amount,
+        ROW_NUMBER() OVER (PARTITION BY pr.cat_name ORDER BY oa.total_amount DESC) AS rnk
+    FROM order_amount as oa
+    JOIN product as pr ON oa.product_id = pr.product_id
+)
+SELECT
+    cat_name,
+    product_name,
+    total_amount
+FROM rnk
+WHERE rnk IN (1,2,3)
+"
 ```
 
 3. Top 3 Products across categories (Total Amount)
 ```{r}
-
-dbGetQuery(my_connection,
-           "WITH product AS (
-              SELECT
-                p.product_id,
-                pc.cat_name,
-                p.product_name
-              FROM PRODUCTS as p
-              JOIN PRODUCT_CATEGORY as pc ON pc.category_id = p.category_id
-            ),
-            order_amount AS (
-              SELECT
-                o.product_id AS product_id,
-                SUM(o.quantity * p.price) AS total_amount
-              FROM ORDERS as o
-              JOIN PRODUCTS as p ON o.product_id = p.product_id
-              WHERE LOWER(o.order_status) IN ('shipped', 'delivered')
-              GROUP BY o.product_id
-            ),
-            rnk AS (
-              SELECT
-                pr.cat_name,
-                pr.product_name,
-                oa.total_amount,
-                ROW_NUMBER() OVER (PARTITION BY pr.cat_name ORDER BY oa.total_amount DESC) AS rnk
-              FROM order_amount as oa
-              JOIN product as pr ON oa.product_id = pr.product_id
-            )
-            SELECT
-              cat_name,
-              product_name,
-              total_amount
-            FROM rnk
-            WHERE rnk IN (1,2,3);")
-
+# Define the SQL query
+query <- "
+SELECT
+    pc.cat_name,
+    p.product_name,
+    SUM(o.quantity * p.price) AS total_amount
+FROM ORDERS as o
+JOIN PRODUCTS as p ON o.product_id = p.product_id
+JOIN PRODUCT_CATEGORY as pc ON pc.category_id = p.category_id
+WHERE LOWER(o.order_status) IN ('shipped', 'delivered')
+GROUP BY p.product_id, pc.cat_name, p.product_name
+ORDER BY total_amount DESC
+LIMIT 3
+"
 ```
+
+```{r}
+# Execute the query and store the result in a data frame
+top_products_df <- dbGetQuery(my_connection, query)
+
+# Get overall top 3 products
+top_3_products <- product_amounts_with_category_name %>%
+  arrange(desc(total_amount)) %>%
+  slice_max(total_amount, n = 3) %>%
+  ungroup()
+
+# Plot using ggplot2
+ggplot(top_products_df, aes(x = reorder(product_name, total_amount), y = total_amount, fill = cat_name)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  coord_flip() +
+  labs(title = "Top 3 Products by Total Amount",
+       x = "Product Name",
+       y = "Total Amount") +
+  theme_minimal() +
+  theme(legend.title = element_text(size = 12),
+        legend.text = element_text(size = 10))
+```
+
+
 
 4. Average delivery time for orders across top 5 delivery suppliers
 ```{r}
