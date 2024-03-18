@@ -232,8 +232,12 @@ orders_df <- generate_shipment_ids(orders_df)
                                    c("Cancelled","Pending Payment")
                                  , NA_character_,as.character(shipment_id)),
            payment_method = if_else(order_status == "Pending Payment"
-                                    ,NA_character_,payment_method)) %>%
+                                    ,NA_character_,payment_method),
+           gift_card_id = if_else(payment_method == "Gift Card",gift_card_id,NA_character_)) %>%
     mutate(supplier_id = NULL)
+
+used_gift_cards <- unique(na.omit(orders_df$gift_card_id))
+gift_card_df$status[gift_card_df$gift_card_id %in% used_gift_cards] <- 'USED'
 ```
 
 
