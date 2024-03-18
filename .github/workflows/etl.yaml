@@ -29,21 +29,8 @@ jobs:
         run: |
           Rscript -e 'install.packages(c("dplyr","readr","RSQLite","lubridate","rmarkdown","DBI"))'
 
-      - name: Install Quarto
-        run: |
-          QUARTO_URL=$(curl -s https://api.github.com/repos/quarto-dev/quarto-cli/releases/latest \
-                 | grep "browser_download_url.*quarto-linux-amd64.deb" \
-                 | grep -o "https://[^ \"]*")
-          if [[ -z "$QUARTO_URL" ]]; then
-          echo "Failed to find the Quarto download URL"
-          exit 1
-          fi
-          curl -L -o quarto-linux-amd64.deb "$QUARTO_URL"
-          if [ $? -ne 0 ]; then
-          echo "Failed to download Quarto"
-          exit 1
-          fi
-          sudo dpkg -i quarto-linux-amd64.deb
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
 
       - name: Render .qmd file
         run: |
