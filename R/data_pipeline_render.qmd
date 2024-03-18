@@ -15,7 +15,7 @@ knitr::opts_chunk$set(message = FALSE)
 ```
 
 
-```{r, results='hide'}
+```{r, echo=FALSE,results='hide'}
 library(readr)
 library(RSQLite)
 library(tibble) 
@@ -31,15 +31,10 @@ library(DBI)
 
 ## Task 1.1: E-R Diagram Design
 
-#Part 1.2 - SQL Database Schema Creation 
-
 
 ## Task 1.2: SQL Database Schema Creation 
 
 ```{r, results='hide'}
-
-#setwd("/cloud/project/")
-print(getwd())
 
 #connect to the SQLite database
 my_connection <- RSQLite::dbConnect(RSQLite::SQLite(),
@@ -143,9 +138,6 @@ dbExecute(my_connection,
 dbGetQuery(my_connection, 
     sprintf("SELECT name FROM sqlite_master WHERE type='table';")
   )
-
-
-# dbDisconnect(my_connection)
 
 
 ```
