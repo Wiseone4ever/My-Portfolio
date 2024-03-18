@@ -1,7 +1,9 @@
 ---
-output: html_document
-editor_options: 
-  chunk_output_type: console
+format:
+  pdf:
+    toc: true
+    number-sections: true
+    colorlinks: true
 ---
 
 
@@ -17,8 +19,6 @@ library(purrr)
 library(ggplot2)
 library(RSQLite)
 library(DBI)
-install.packages("tidyr")
-library(tidyr)
 ```
 
 
@@ -27,10 +27,12 @@ Part 1.2 - SQL Database Schema Creation
 
 ```{r}
 
-setwd("/cloud/project/")
+#setwd("/cloud/project/")
+print(getwd())
 
 #connect to the SQLite database
-my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite(),
+                                    "../database/ecommerce_database_v1.db")
 
 
 dbExecute(my_connection, 
@@ -81,7 +83,8 @@ dbExecute(my_connection,
                     stock_quantity INTEGER NOT NULL,
                     category_id VARCHAR(255) NOT NULL,
                     supplier_id VARCHAR(255) NOT NULL,
-                    FOREIGN KEY(category_id) REFERENCES PRODUCT_CATEGORY(category_id),
+                    FOREIGN KEY(category_id) REFERENCES 
+                          PRODUCT_CATEGORY(category_id),
                     FOREIGN KEY(supplier_id) REFERENCES SUPPLIERS(supplier_id)
                 );"
           )
@@ -140,11 +143,16 @@ dbGetQuery(my_connection,
 
 ```{r}
 ## Find all files matching the pattern
-customer_files <- list.files(path = "datasets",pattern = "CUSTOMERS.*\\.csv$",full.names = TRUE )
-category_files <- list.files(path = "datasets",pattern = "CATEGORY.*\\.csv$",full.names = TRUE )
-gift_card_files <- list.files(path = "datasets",pattern = "GIFT_CARDS.*\\.csv$",full.names = TRUE )
-suppliers_files <- list.files(path = "datasets",pattern = "SUPPLIERS.*\\.csv$",full.names = TRUE )
-products_files <- list.files(path = "datasets",pattern = "PRODUCTS.*\\.csv$",full.names = TRUE )
+customer_files <- list.files(path = "../datasets"
+                            ,pattern = "CUSTOMERS.*\\.csv$",full.names = TRUE)
+category_files <- list.files(path = "../datasets"
+                            ,pattern = "CATEGORY.*\\.csv$",full.names = TRUE)
+gift_card_files <- list.files(path = "../datasets"
+                            ,pattern = "GIFT_CARDS.*\\.csv$",full.names = TRUE)
+suppliers_files <- list.files(path = "../datasets"
+                            ,pattern = "SUPPLIERS.*\\.csv$",full.names = TRUE)
+products_files <- list.files(path = "../datasets"
+                            ,pattern = "PRODUCTS.*\\.csv$",full.names = TRUE)
 
 customers_df <- readr::read_csv(customer_files[1])
 gift_card_df <- readr::read_csv(gift_card_files[1])
@@ -157,15 +165,19 @@ products_df <- readr::read_csv(products_files[1])
 #Sample Customers
 
 sample_size <- floor(0.2 * nrow(products_df))
-sampled_product_ids <- sample(products_df$product_id, size = sample_size, replace = FALSE)
-sampled_products_df <- products_df[products_df$product_id %in% sampled_product_ids, ]
+sampled_product_ids <- sample(products_df$product_id, 
+                              size = sample_size, replace = FALSE)
+sampled_products_df <- products_df[products_df$product_id %in% 
+                                     sampled_product_ids, ]
 
 
 #Sample Products
 
 sample_size <- floor(0.2 * nrow(customers_df))
-sampled_customer_ids <- sample(customers_df$customer_id, size = sample_size, replace = FALSE)
-sampled_customers_df <- customers_df[customers_df$customer_id %in% sampled_customer_ids, ]
+sampled_customer_ids <- sample(customers_df$customer_id, 
+                               size = sample_size, replace = FALSE)
+sampled_customers_df <- customers_df[customers_df$customer_id %in% 
+                                       sampled_customer_ids, ]
 
 
 generate_orders_data <- function(n = 1000) {
@@ -175,19 +187,25 @@ generate_orders_data <- function(n = 1000) {
     order_id = sprintf("%s-%04d", "ORD", 1:n),
     customer_id = sample(sampled_customers_df$customer_id, n, replace = TRUE),
     product_id = sample(sampled_products_df$product_id, n, replace = TRUE),
-    gift_card_id = sample(c(NA, gift_card_df$gift_card_id), n, replace = TRUE), # Assuming gift cards are used as discounts
-    payment_method = sample(c("Credit Card", "Debit Card", "PayPal", "Gift Card"), n, replace = TRUE),
+    gift_card_id = sample(c(NA, gift_card_df$gift_card_id), n, replace = TRUE), 
+    payment_method = sample(c("Credit Card", "Debit Card", "PayPal", 
+                              "Gift Card"),n, replace = TRUE),
     quantity = sample(1:5, n, replace = TRUE),
-    order_timestamp = sample(seq(as.POSIXct('2024/02/01'), as.POSIXct('2024/02/29'), by="day"), n, replace = TRUE),
-    payment_timestamp = order_timestamp + hours(sample(1:72, n, replace = TRUE)), # Payment within 1 to 72 hours after order
-    order_status = sample(c("Processing", "Shipped", "Delivered", "Cancelled","Pending Payment","Out for Delivery"), n, replace = TRUE),
-    #amount = round(runif(n, 50, 500), 2) # Random amount between $50 and $500
+    order_timestamp = sample(seq(as.POSIXct('2024/02/01')
+                      ,as.POSIXct('2024/02/29'), by="day"), n, replace = TRUE),
+    payment_timestamp = order_timestamp + hours(sample(1:72, n, replace = TRUE)), 
+    order_status = sample(c("Processing", "Shipped", "Delivered", 
+                            "Cancelled","Pending Payment","Out for Delivery")
+                          , n, replace = TRUE),
   )
   
   # Augment the orders data frame with supplier_id using left_join
   orders_df <- orders_df %>%
-    left_join(sampled_products_df %>% select(product_id, supplier_id), by = "product_id") %>%
-    select(order_id, customer_id, product_id, gift_card_id, payment_method, quantity, order_timestamp, payment_timestamp, order_status, supplier_id)
+    left_join(sampled_products_df %>% select(product_id, supplier_id)
+              , by = "product_id") %>%
+    select(order_id, customer_id, product_id, gift_card_id
+           , payment_method, quantity, order_timestamp, payment_timestamp
+           , order_status, supplier_id)
   
   return(orders_df)
 }
@@ -211,11 +229,12 @@ generate_shipment_ids <- function(df) {
 # Apply the function to your data frame
 orders_df <- generate_shipment_ids(orders_df)
 
-# Optional: Adjusting for logical consistency (e.g., cancelled orders should not have a shipment_id)
   orders_df <- orders_df %>%
-    mutate(shipment_id = if_else(order_status %in% c("Cancelled","Pending Payment"), NA_character_,
+    mutate(shipment_id = if_else(order_status %in% 
+                              c("Cancelled","Pending Payment"), NA_character_,
                                  as.character(shipment_id)),
-           payment_method = if_else(order_status == "Pending Payment",NA_character_,payment_method)) %>%
+           payment_method = if_else(order_status == "Pending Payment"
+                                    ,NA_character_,payment_method)) %>%
     mutate(supplier_id = NULL)
 ```
 
@@ -226,13 +245,19 @@ orders_df <- generate_shipment_ids(orders_df)
   shipment_df <- orders_df %>%
     mutate(
       # Dispatch date could be the same as the order date or a day after
-      dispatch_timestamp = order_timestamp + days(sample(0:1, n(), replace = TRUE)),
+      dispatch_timestamp = order_timestamp + days(sample(0:1, n()
+                                                         , replace = TRUE)),
       
-      # Delivered date should be after the dispatch date; here I assume delivery takes between 2 to 5 days
-      delivered_timestamp = dispatch_timestamp + days(sample(2:5, n(), replace = TRUE)),
+      # Delivered date should be after the dispatch date; 
+      #here I assume delivery takes between 2 to 5 days
+      delivered_timestamp = dispatch_timestamp + days(sample(2:5, n()
+                                                             , replace = TRUE)),
       
       # Randomly assign a delivery status
-      status = if_else(order_status == "Processing","Ready for Dispatch",if_else(order_status == "Shipped","In Transit",if_else(order_status == "Out for Delivery",order_status,if_else(order_status == "Delivered",order_status,"NA"))))
+      status = if_else(order_status == "Processing","Ready for Dispatch"
+                       ,if_else(order_status == "Shipped","In Transit"
+                      ,if_else(order_status == "Out for Delivery",order_status
+                    ,if_else(order_status == "Delivered",order_status,"NA"))))
     ) %>%
     # Select only the relevant columns for the shipment table
     select(shipment_id, dispatch_timestamp, delivered_timestamp, status) %>%
@@ -245,25 +270,35 @@ orders_df <- generate_shipment_ids(orders_df)
   shipment_df <- shipment_df %>%
     mutate(
       # Assign NA to dispatch_timestamp if status is 'Ready for Dispatch'
-      dispatch_timestamp = if_else(status == "Ready for Dispatch", NA_Date_, dispatch_timestamp),
-      delivered_timestamp = if_else(status == "Ready for Dispatch", NA_Date_, delivered_timestamp),
+      dispatch_timestamp = if_else(status == "Ready for Dispatch"
+                                   , NA_Date_, dispatch_timestamp),
+      delivered_timestamp = if_else(status == "Ready for Dispatch"
+                                    , NA_Date_, delivered_timestamp),
       
       # 'In Transit' status should have a dispatch date but no delivery date
-      dispatch_timestamp = if_else(status == "In Transit", Sys.Date() - days(sample(1:5, 1)), dispatch_timestamp),
-      delivered_timestamp = if_else(status == "In Transit", NA_Date_, delivered_timestamp),
+      dispatch_timestamp = if_else(status == "In Transit"
+                        , Sys.Date() - days(sample(1:5, 1)), dispatch_timestamp),
+      delivered_timestamp = if_else(status == "In Transit"
+                        , NA_Date_, delivered_timestamp),
       
       # 'In Transit' status should have a dispatch date but no delivery date
-      dispatch_timestamp = if_else(status == "Out for Delivery", Sys.Date() - days(sample(1:5, 1)), dispatch_timestamp),
-      delivered_timestamp = if_else(status == "Out for Delivery", NA_Date_, delivered_timestamp),
+      dispatch_timestamp = if_else(status == "Out for Delivery"
+                      , Sys.Date() - days(sample(1:5, 1)), dispatch_timestamp),
+      delivered_timestamp = if_else(status == "Out for Delivery"
+                      , NA_Date_, delivered_timestamp),
       
-      # If status is 'Delivered', both dates should be in the past, with delivered after dispatched
-      dispatch_timestamp = if_else(status == "Delivered" & is.na(dispatch_timestamp), Sys.Date() - days(sample(6:10, 1)), dispatch_timestamp),
-      delivered_timestamp = if_else(status == "Delivered", dispatch_timestamp + days(sample(1:5, 1)), delivered_timestamp)
+      # If status is 'Delivered', both dates should be in the past, 
+      #with delivered after dispatched
+      dispatch_timestamp = if_else(status == "Delivered" & 
+                                     is.na(dispatch_timestamp)
+                      , Sys.Date() - days(sample(6:10, 1)), dispatch_timestamp),
+      delivered_timestamp = if_else(status == "Delivered"
+              , dispatch_timestamp + days(sample(1:5, 1)), delivered_timestamp)
     )
   
-write_csv(orders_df,"datasets/ORDERS.csv")
+write_csv(orders_df,"../datasets/ORDERS.csv")
 
-write_csv(shipment_df,"datasets/SHIPMENTS.csv")
+write_csv(shipment_df,"../datasets/SHIPMENTS.csv")
 
 
 ```
@@ -275,11 +310,13 @@ Data Validation and Ingestion
 ```{r}
 ingest_customer_data <- function(df) {
   
-  my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+  my_connection <- RSQLite::dbConnect(RSQLite::SQLite()
+                                      , "../database/ecommerce_database_v1.db")
   # Data validation
 
   #email check
-  valid_email <- grepl("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", df$email)
+  valid_email <- grepl("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+                       , df$email)
   df <- df[valid_email, ]
   
   #gender check
@@ -289,7 +326,8 @@ ingest_customer_data <- function(df) {
 
   # Data type checks (adjust according to your data frame)
   df$date_of_birth <- as.Date(df$date_of_birth,format = "%d/%m/%y")
-  df$account_created_date <- as.Date(df$account_created_date,format = "%d/%m/%y")
+  df$account_created_date <- as.Date(df$account_created_date
+                                     ,format = "%d/%m/%y")
   df$premium_subscription <- as.integer(df$premium_subscription)
   
   # Check for null values in NOT NULL columns
@@ -300,27 +338,35 @@ ingest_customer_data <- function(df) {
   for(i in 1:nrow(df)){
     
       #Check for duplicate records based on the primary key
-   existing_ids <- dbGetQuery(my_connection, sprintf("SELECT customer_id FROM CUSTOMERS WHERE customer_id = '%s'",   df$customer_id[i]))
+   existing_ids <- dbGetQuery(my_connection
+          , sprintf("SELECT customer_id FROM CUSTOMERS WHERE customer_id = '%s'"
+                              ,   df$customer_id[i]))
     if(nrow(existing_ids) > 0) {
-      cat(sprintf("Skipping duplicate entry for customer_id: %s\n", df$customer_id[i]))
+      cat(sprintf("Skipping duplicate entry for customer_id: %s\n"
+                  , df$customer_id[i]))
       next
     }
      
-    insert_query <- sprintf("INSERT INTO CUSTOMERS (customer_id, first_name, last_name, username, gender, date_of_birth, email, phone, street_name, city, country, zip_code, account_created_date, premium_subscription)
-                            VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %d)",
-                            df$customer_id[i], df$first_name[i], df$last_name[i], df$username[i], df$gender[i], df$date_of_birth[i],
-                            df$email[i], df$phone[i], df$street_name[i], df$city[i], df$country[i], df$zip_code[i], df$account_created_date[i], df$premium_subscription[i])
+    insert_query <- sprintf("INSERT INTO CUSTOMERS (customer_id, first_name
+    , last_name, username, gender, date_of_birth, email, phone, street_name
+    , city, country, zip_code, account_created_date, premium_subscription)
+    VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'
+    , '%s', '%s', '%s', '%s', '%s', %d)",
+    df$customer_id[i], df$first_name[i], df$last_name[i], df$username[i]
+    , df$gender[i], df$date_of_birth[i],df$email[i], df$phone[i]
+    , df$street_name[i], df$city[i], df$country[i], df$zip_code[i]
+    , df$account_created_date[i], df$premium_subscription[i])
     tryCatch({
-dbExecute(my_connection, insert_query)
-  cat(sprintf("Successfully inserted row: %d\n", i))
-}, error = function(e) {
-  cat(sprintf("Error in inserting row: %d, Error: %s\n", i, e$message))
-})
-  }
-
-  # Close the database connection
-  dbDisconnect(my_connection)
-}
+    dbExecute(my_connection, insert_query)
+      cat(sprintf("Successfully inserted row: %d\n", i))
+    }, error = function(e) {
+      cat(sprintf("Error in inserting row: %d, Error: %s\n", i, e$message))
+    })
+      }
+    
+      # Close the database connection
+      dbDisconnect(my_connection)
+    }
 
 for(file in customer_files) {
   df <- readr::read_csv(file)
@@ -331,7 +377,7 @@ for(file in customer_files) {
 ```
 
 ```{r}
-my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
 dbGetQuery(my_connection,"SELECT * FROM CUSTOMERS;")
 ```
 
@@ -341,7 +387,7 @@ dbGetQuery(my_connection,"SELECT * FROM CUSTOMERS;")
 ```{r}
 ingest_product_category <- function(df) {
   
-  my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+  my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
 
   # Check for null values in NOT NULL columns
   required_columns <- c("category_id", "cat_name")
@@ -380,7 +426,7 @@ for(file in category_files) {
 
 
 ```{r}
-my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
 dbGetQuery(my_connection,"SELECT * FROM PRODUCT_CATEGORY;")
 ```
 
@@ -390,7 +436,7 @@ SUPPLIERS
 ```{r}
 ingest_suppliers <- function(df) {
   
-  my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+  my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
 
   # Email format validation
   valid_email <- grepl("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", df$supplier_email)
@@ -437,7 +483,7 @@ GIFT CARDS
 
 ingest_gift_card_data <- function(df) {
   
-  my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+  my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
 
   # Validate 'gift_card_id' and 'gift_card_code' for null values
   required_columns <- c("gift_card_id", "gift_card_code", "status")
@@ -478,7 +524,7 @@ for(file in gift_card_files) {
 ```
 
 ```{r}
-my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
 dbGetQuery(my_connection,"SELECT * FROM GIFT_CARD;")
 ```
 
@@ -487,7 +533,7 @@ PRODUCTS
 ```{r}
 ingest_products <- function(df) {
   
-  my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+  my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
   # Data type checks
   df$stock_quantity <- as.integer(df$stock_quantity)
   
@@ -527,7 +573,7 @@ for(file in products_files) {
 ```
 
 ```{r}
-my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
 dbGetQuery(my_connection,"SELECT * FROM PRODUCTS;")
 ```
 
@@ -537,7 +583,7 @@ ORDER
 ```{r}
 ingest_orders <- function(df) {
   
-  my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+  my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
 
   # Essential columns for validation
   required_columns <- c("order_id", "order_status", "quantity")
@@ -580,7 +626,7 @@ ingest_orders(orders_df)
 
 
 ```{r}
-my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
 dbGetQuery(my_connection,"SELECT * FROM ORDERS;")
 ```
 
@@ -590,7 +636,7 @@ SHIPMENTS
 ```{r}
 ingest_shipment_data <- function(df) {
   
-  my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+  my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
   # Validate 'shipment_id' and 'status' for null values
   required_columns <- c("shipment_id", "status")
   df <- df[!rowSums(is.na(df[required_columns])) > 0, ]
@@ -625,7 +671,7 @@ ingest_shipment_data(shipment_df)
 ```
 
 ```{r}
-my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
 dbGetQuery(my_connection,"SELECT * FROM SHIPMENT;")
 ```
 
@@ -703,9 +749,9 @@ ggplot(cancelled_orders_by_category, aes(x = reorder(cat_name, n), y = n, fill =
 SQL version
 1. Top 10 Products - Overall (Quantity)
 ```{r}
-query_1 <- "
-WITH product AS (
-           SELECT 
+
+dbGetQuery(my_connection,
+           "SELECT 
               ORDERS.product_id,
               product_name,
               count(quantity) as total_purchase
@@ -715,19 +761,8 @@ WITH product AS (
            GROUP BY ORDERS.product_id,product_name
            ORDER BY total_purchase desc
            LIMIT 10
-           
-)
-SELECT*FROM product
-"
+           ;")
 ```
-
-```{r}
-top_10_products <- dbGetQuery(my_connection, query_1)
-
-ggplot(top_10_products,aes(x=product_name,y=total_purchase, fill=product_name))+geom_bar(stat="identity")+labs(x="Product Name", y="Total Number of Purchase")+coord_flip()
-
-```
-
 
 2. Top 5 Categories (Quantity)
 ```{r}
@@ -844,7 +879,7 @@ dbGetQuery(my_connection,
 7. Average number of orders across time
 ```{r}
 
-query_7 <- dbGetQuery(my_connection,
+dbGetQuery(my_connection,
            "SELECT
               order_timestamp as date,
               SUM(o.quantity) as total_order
@@ -856,17 +891,10 @@ query_7 <- dbGetQuery(my_connection,
 
 ```
 
-```{r}
-ggplot(query_7,aes(x=date,y=total_order,group=1))+geom_point(stat="identity")+geom_line(stat="identity")+labs(x="Date",y="Total Number of Order")+theme(axis.text.x=element_text(angle=35))
-
-```
-
-
-
 8. Scatter plot for revenue across quantity; color by category
 ```{r}
 
-dbGetQuery(my_connection,
+revenue_quantity <- dbGetQuery(my_connection,
            "SELECT
               cat_name,
               SUM(o.quantity) as quantity,
@@ -889,4 +917,8 @@ ggplot(revenue_quantity, aes(x = quantity, y = amount, color = cat_name)) +
 ```
 
 
+```{r}
 
+dbDisconnect(my_connection)
+
+```
