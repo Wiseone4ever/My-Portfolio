@@ -818,75 +818,25 @@ dbGetQuery(my_connection,
 >>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
 
 SQL version
+
 1. Top 10 Products - Overall (Quantity)
 ```{r}
 # Define the SQL query
-query <- "
-WITH product AS (
-    SELECT
-        p.product_id,
-        pc.cat_name,
-        p.product_name
-    FROM PRODUCTS as p
-    JOIN PRODUCT_CATEGORY as pc ON pc.category_id = p.category_id
-),
-order_amount AS (
-    SELECT
-        o.product_id AS product_id,
-        SUM(o.quantity * p.price) AS total_amount
-    FROM ORDERS as o
-    JOIN PRODUCTS as p ON o.product_id = p.product_id
-    WHERE LOWER(o.order_status) IN ('shipped', 'delivered')
-    GROUP BY o.product_id
-),
-rnk AS (
-    SELECT
-        pr.cat_name,
-        pr.product_name,
-        oa.total_amount,
-        ROW_NUMBER() OVER (PARTITION BY pr.cat_name ORDER BY oa.total_amount DESC) AS rnk
-    FROM order_amount as oa
-    JOIN product as pr ON oa.product_id = pr.product_id
-)
-SELECT
-    cat_name,
-    product_name,
-    total_amount
-FROM rnk
-WHERE rnk IN (1,2,3)
-"
-```
+query_1 <- dbGetQuery(my_connection,
+           "SELECT 
+              ORDERS.product_id,
+              product_name,
+              count(quantity) as total_purchase
+           FROM ORDERS
+           JOIN PRODUCTS ON ORDERS.product_id = PRODUCTS.product_id
+           WHERE lower(order_status) in ('shipped','delivered')
+           GROUP BY ORDERS.product_id,product_name
+           ORDER BY total_purchase desc
+           LIMIT 10
+           ;")
 
-3. Top 3 Products across categories (Total Amount)
-```{r}
-# Define the SQL query
-query_3 <- "
-SELECT
-    pc.cat_name,
-    p.product_name,
-    SUM(o.quantity * p.price) AS total_amount
-FROM ORDERS as o
-JOIN PRODUCTS as p ON o.product_id = p.product_id
-JOIN PRODUCT_CATEGORY as pc ON pc.category_id = p.category_id
-WHERE LOWER(o.order_status) IN ('shipped', 'delivered')
-GROUP BY p.product_id, pc.cat_name, p.product_name
-ORDER BY total_amount DESC
-LIMIT 3
-"
-```
-
-```{r}
-# Execute the query and store the result in a data frame
-top_products_df <- dbGetQuery(my_connection, query_3)
-
-# Get overall top 3 products
-top_3_products <- product_amounts_with_category_name %>%
-  arrange(desc(total_amount)) %>%
-  slice_max(total_amount, n = 3) %>%
-  ungroup()
-
-# Plot using ggplot2
-ggplot(top_products_df, aes(x = reorder(product_name, total_amount), y = total_amount, fill = cat_name)) +
+# Visualize the result using ggplot2
+ggplot(query_1, aes(x = reorder(product_name, total_amount), y = total_amount, fill = cat_name)) +
   geom_bar(stat = "identity", position = position_dodge()) +
   coord_flip() +
   labs(title = "Top 3 Products by Total Amount",
@@ -897,12 +847,102 @@ ggplot(top_products_df, aes(x = reorder(product_name, total_amount), y = total_a
         legend.text = element_text(size = 10))
 ```
 
+2. Top 5 Categories (Quantity)
+```{r}
+# SQL query to fetch top 5 categories by quantity
+query_2 <- dbGetQuery(my_connection,
+           "SELECT 
+              cat_name as category,
+              count(quantity) as total_purchase
+           FROM ORDERS
+           JOIN PRODUCTS ON ORDERS.product_id = PRODUCTS.product_id
+           JOIN PRODUCT_CATEGORY ON PRODUCTS.category_id = PRODUCT_CATEGORY.category_id
+           WHERE lower(order_status) in ('shipped','delivered')
+           GROUP BY cat_name
+           ORDER by total_purchase desc
+           LIMIT 5
+           ;")
 
+# Plot using ggplot2
+ggplot(query_2, aes(x = reorder(category, total_purchase), y = total_purchase, fill = category)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  coord_flip() +
+  labs(title = "Top 5 Categories by Quantity",
+       x = "Category",
+       y = "Quantity Sold") +
+  theme_minimal() +
+  theme(legend.title = element_text(size = 12),
+        legend.text = element_text(size = 10))
+```
+
+2. Top 5 Categories (Quantity)
+```{r}
+# SQL query to fetch top 5 categories by quantity
+query_2 <- "
+WITH product AS (
+    SELECT 
+        PRODUCT_CATEGORY.cat_name AS category,
+        COUNT(ORDERS.quantity) AS total_purchase
+    FROM ORDERS
+    JOIN PRODUCTS ON ORDERS.product_id = PRODUCTS.product_id
+    JOIN PRODUCT_CATEGORY ON PRODUCTS.category_id = PRODUCT_CATEGORY.category_id
+    WHERE LOWER(ORDERS.order_status) IN ('shipped', 'delivered')
+    GROUP BY PRODUCT_CATEGORY.cat_name
+    ORDER BY total_purchase DESC
+    LIMIT 5
+)
+SELECT * FROM product
+"
+```
+
+```{r}
+# Execute the query and store the result in a data frame
+top_categories_df <- dbGetQuery(my_connection, query_2)
+
+# Plot using ggplot2
+ggplot(top_categories_df, aes(x = reorder(category, total_purchase), y = total_purchase, fill = category)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  coord_flip() +
+  labs(title = "Top 5 Categories by Quantity",
+       x = "Category",
+       y = "Quantity Sold") +
+  theme_minimal() +
+  theme(legend.title = element_text(size = 12),
+        legend.text = element_text(size = 10))
+```
+
+3. Top 3 Products across categories (Total Amount)
+```{r}
+query_3 <- dbGetQuery(my_connection,
+"SELECT
+    pc.cat_name,
+    p.product_name,
+    SUM(o.quantity * p.price) AS total_amount
+FROM ORDERS as o
+JOIN PRODUCTS as p ON o.product_id = p.product_id
+JOIN PRODUCT_CATEGORY as pc ON pc.category_id = p.category_id
+WHERE LOWER(o.order_status) IN ('shipped', 'delivered')
+GROUP BY p.product_id, pc.cat_name, p.product_name
+ORDER BY total_amount DESC
+LIMIT 3;")
+
+# Plot using ggplot2
+ggplot(query_3, aes(x = reorder(product_name, total_amount), y = total_amount, fill = cat_name)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  coord_flip() +
+  labs(title = "Top 3 Products by Total Amount",
+       x = "Product Name",
+       y = "Total Amount") +
+  theme_minimal() +
+  theme(legend.title = element_text(size = 12),
+        legend.text = element_text(size = 10))
+```
 
 4. Average delivery time for orders across top 5 delivery suppliers
 ```{r}
-
-dbGetQuery(my_connection,
+<<<<<<< HEAD
+# Define the SQL query for average delivery time for orders across top 5 delivery suppliers
+query_4 <- dbGetQuery(my_connection,
            "SELECT 
                sup.supplier_id,
                sup.supplier_name AS supplier_name,
@@ -916,12 +956,48 @@ dbGetQuery(my_connection,
            ORDER BY delivery_time DESC, supplier_name
            LIMIT 5;")
 
+# Plot using ggplot2
+ggplot(query_4, aes(x = reorder(supplier_name, average_delivery_time), y = average_delivery_time, fill = supplier_name)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Average Delivery Time for Delivery Suppliers",
+=======
+query_4 <- "
+SELECT
+    sup.supplier_name AS supplier_name,
+    AVG(julianday(s.delivered_timestamp) - julianday(s.dispatch_timestamp)) AS average_delivery_time
+FROM SHIPMENT AS s
+JOIN ORDERS AS o ON o.shipment_id = s.shipment_id
+JOIN PRODUCTS AS p ON p.product_id = o.product_id
+JOIN SUPPLIERS AS sup ON sup.supplier_id = p.supplier_id
+WHERE LOWER(s.status) = 'delivered'
+GROUP BY sup.supplier_id, sup.supplier_name
+ORDER BY average_delivery_time ASC
+LIMIT 5
+"
+```
+
+```{r}
+# Execute the query and store the result in a data frame
+top_delivery_df <- dbGetQuery(my_connection, query_4)
+
+# Plot using ggplot2
+ggplot(top_delivery_df, aes(x = reorder(supplier_name, average_delivery_time), y = average_delivery_time, fill = supplier_name)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Average Delivery Time for Top 5 Delivery Suppliers",
+>>>>>>> e4cbaa3f596b2def96caf11c8ec3ca07379740e7
+       x = "Supplier Name",
+       y = "Average Delivery Time (Days)") +
+  theme_minimal() +
+  theme(legend.position = "none")
 ```
 
 5. Top 20 Average Spending across customers
 ```{r}
-
-dbGetQuery(my_connection,
+# Define the SQL query
+<<<<<<< HEAD
+query_5 <- dbGetQuery(my_connection,
            "SELECT
               o.customer_id as customer_id,
               c.first_name ||' '|| c.last_name as customer_name,
@@ -935,26 +1011,54 @@ dbGetQuery(my_connection,
             ORDER BY avg_amount DESC
             limit 20
            ;")
-
-```
-
-6. Top 20 cancelled orders for which category
-```{r}
-query_6 <- "
-            SELECT
-               pc.cat_name,
-               COUNT(o.quantity) as total_cancelled
-             FROM ORDERS as o
-             JOIN PRODUCTS as p ON p.product_id = o.product_id
-             JOIN PRODUCT_CATEGORY as pc on pc.category_id = p.category_id
-             WHERE LOWER(order_status) = 'cancelled'
-             GROUP BY pc.cat_name
-             ORDER BY total_cancelled DESC"
+=======
+query_5 <- "
+SELECT
+    o.customer_id as customer_id,
+    c.first_name || ' ' || c.last_name as customer_name,
+    AVG(p.price * o.quantity) as avg_amount
+FROM ORDERS as o
+JOIN CUSTOMERS as c ON o.customer_id = c.customer_id
+JOIN PRODUCTS as p ON p.product_id = o.product_id
+WHERE LOWER(o.order_status) IN ('shipped', 'delivered')
+GROUP BY o.customer_id, c.first_name, c.last_name
+ORDER BY avg_amount DESC
+LIMIT 20
+"
 ```
 
 ```{r}
 # Execute the query and store the result in a data frame
-cancelled_df <- dbGetQuery(my_connection, query_6)
+avg_spending_df <- dbGetQuery(my_connection, query_5)
+>>>>>>> e4cbaa3f596b2def96caf11c8ec3ca07379740e7
+
+# Plot using ggplot2
+ggplot(avg_spending_df, aes(x = reorder(customer_name, avg_amount), y = avg_amount, fill = customer_name)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Top 20 Average Spending Across Customers",
+       x = "Customer",
+       y = "Average Spending") +
+  theme_minimal() +
+  theme(axis.title.x = element_text(face = "bold"),
+        axis.title.y = element_text(face = "bold"),
+        plot.title = element_text(hjust = 0.5, face = "bold"),
+        legend.position = "none")
+```
+
+6. Top 20 cancelled orders for which category
+```{r}
+query_6 <- dbGetQuery(my_connection,
+           "SELECT
+              cat_name,
+              COUNT(o.quantity) as total_cancelled
+            FROM ORDERS as o
+            JOIN PRODUCTS as p ON p.product_id = o.product_id
+            JOIN PRODUCT_CATEGORY as pc on pc.category_id = p.category_id
+            WHERE LOWER(order_status) = 'cancelled'
+            GROUP BY cat_name
+            ORDER BY total_cancelled DESC
+           ;")
 
 # Visualization
 ggplot(cancelled_df, aes(x = reorder(cat_name, total_cancelled), y = total_cancelled, fill = cat_name)) +
@@ -966,7 +1070,6 @@ ggplot(cancelled_df, aes(x = reorder(cat_name, total_cancelled), y = total_cance
   theme_minimal() +
   theme(legend.position = "none")
 ```
-
 
 7. Average number of orders across time
 ```{r}
@@ -1007,6 +1110,7 @@ ggplot(revenue_quantity, aes(x = quantity, y = amount, color = cat_name)) +
   theme(legend.position = "right")
 
 ```
+
 
 
 
