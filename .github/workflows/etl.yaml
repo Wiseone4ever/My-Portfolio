@@ -30,6 +30,11 @@ jobs:
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
+      - name: Install TinyTeX
+        run: |
+          quarto install tinytex
+          tinytex::tlmgr_install('pdflatex')
+
       - name: Render .qmd file to PDF
         run: |
           quarto render R/data_pipeline_render.qmd --to pdf
