@@ -288,13 +288,7 @@ orders_df <- generate_shipment_ids(orders_df)
                                    , Sys.Date() - days(sample(1:14, 1))
                                    , dispatch_timestamp),
       delivered_timestamp = if_else(status == "Out for Delivery"
-                                    , NA_Date_, delivered_timestamp),
-      
-      # If status is 'Delivered', both dates should be in the past
-      #, with delivered after dispatched
-      delivered_timestamp = if_else(status == "Delivered"
-                              , dispatch_timestamp + days(sample(1:14, 1))
-                              , delivered_timestamp + days(sample(1:14, 1)))
+                                    , NA_Date_, delivered_timestamp)
     )
   
 write_csv(orders_df,"datasets/ORDERS.csv")
@@ -880,6 +874,42 @@ ggplot(query_2, aes(x = reorder(category, total_purchase), y = total_purchase, f
         legend.text = element_text(size = 10))
 ```
 
+2. Top 5 Categories (Quantity)
+```{r}
+# SQL query to fetch top 5 categories by quantity
+query_2 <- "
+WITH product AS (
+    SELECT 
+        PRODUCT_CATEGORY.cat_name AS category,
+        COUNT(ORDERS.quantity) AS total_purchase
+    FROM ORDERS
+    JOIN PRODUCTS ON ORDERS.product_id = PRODUCTS.product_id
+    JOIN PRODUCT_CATEGORY ON PRODUCTS.category_id = PRODUCT_CATEGORY.category_id
+    WHERE LOWER(ORDERS.order_status) IN ('shipped', 'delivered')
+    GROUP BY PRODUCT_CATEGORY.cat_name
+    ORDER BY total_purchase DESC
+    LIMIT 5
+)
+SELECT * FROM product
+"
+```
+
+```{r}
+# Execute the query and store the result in a data frame
+top_categories_df <- dbGetQuery(my_connection, query_2)
+
+# Plot using ggplot2
+ggplot(top_categories_df, aes(x = reorder(category, total_purchase), y = total_purchase, fill = category)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  coord_flip() +
+  labs(title = "Top 5 Categories by Quantity",
+       x = "Category",
+       y = "Quantity Sold") +
+  theme_minimal() +
+  theme(legend.title = element_text(size = 12),
+        legend.text = element_text(size = 10))
+```
+
 3. Top 3 Products across categories (Total Amount)
 ```{r}
 query_3 <- dbGetQuery(my_connection,
@@ -909,6 +939,7 @@ ggplot(query_3, aes(x = reorder(product_name, total_amount), y = total_amount, f
 
 4. Average delivery time for orders across top 5 delivery suppliers
 ```{r}
+<<<<<<< HEAD
 # Define the SQL query for average delivery time for orders across top 5 delivery suppliers
 query_4 <- dbGetQuery(my_connection,
            "SELECT 
@@ -929,6 +960,32 @@ ggplot(query_4, aes(x = reorder(supplier_name, average_delivery_time), y = avera
   geom_bar(stat = "identity") +
   coord_flip() +
   labs(title = "Average Delivery Time for Delivery Suppliers",
+=======
+query_4 <- "
+SELECT
+    sup.supplier_name AS supplier_name,
+    AVG(julianday(s.delivered_timestamp) - julianday(s.dispatch_timestamp)) AS average_delivery_time
+FROM SHIPMENT AS s
+JOIN ORDERS AS o ON o.shipment_id = s.shipment_id
+JOIN PRODUCTS AS p ON p.product_id = o.product_id
+JOIN SUPPLIERS AS sup ON sup.supplier_id = p.supplier_id
+WHERE LOWER(s.status) = 'delivered'
+GROUP BY sup.supplier_id, sup.supplier_name
+ORDER BY average_delivery_time ASC
+LIMIT 5
+"
+```
+
+```{r}
+# Execute the query and store the result in a data frame
+top_delivery_df <- dbGetQuery(my_connection, query_4)
+
+# Plot using ggplot2
+ggplot(top_delivery_df, aes(x = reorder(supplier_name, average_delivery_time), y = average_delivery_time, fill = supplier_name)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Average Delivery Time for Top 5 Delivery Suppliers",
+>>>>>>> e4cbaa3f596b2def96caf11c8ec3ca07379740e7
        x = "Supplier Name",
        y = "Average Delivery Time (Days)") +
   theme_minimal() +
@@ -938,6 +995,7 @@ ggplot(query_4, aes(x = reorder(supplier_name, average_delivery_time), y = avera
 5. Top 20 Average Spending across customers
 ```{r}
 # Define the SQL query
+<<<<<<< HEAD
 query_5 <- dbGetQuery(my_connection,
            "SELECT
               o.customer_id as customer_id,
@@ -952,6 +1010,26 @@ query_5 <- dbGetQuery(my_connection,
             ORDER BY avg_amount DESC
             limit 20
            ;")
+=======
+query_5 <- "
+SELECT
+    o.customer_id as customer_id,
+    c.first_name || ' ' || c.last_name as customer_name,
+    AVG(p.price * o.quantity) as avg_amount
+FROM ORDERS as o
+JOIN CUSTOMERS as c ON o.customer_id = c.customer_id
+JOIN PRODUCTS as p ON p.product_id = o.product_id
+WHERE LOWER(o.order_status) IN ('shipped', 'delivered')
+GROUP BY o.customer_id, c.first_name, c.last_name
+ORDER BY avg_amount DESC
+LIMIT 20
+"
+```
+
+```{r}
+# Execute the query and store the result in a data frame
+avg_spending_df <- dbGetQuery(my_connection, query_5)
+>>>>>>> e4cbaa3f596b2def96caf11c8ec3ca07379740e7
 
 # Plot using ggplot2
 ggplot(avg_spending_df, aes(x = reorder(customer_name, avg_amount), y = avg_amount, fill = customer_name)) +
