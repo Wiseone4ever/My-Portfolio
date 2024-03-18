@@ -42,7 +42,7 @@ jobs:
         run: |
           git config --global user.email "vignesh.parthasarathy@warwick.ac.uk"
           git config --global user.name "Vickyyyy98"
-          git add database/ecommerce_database.db
+          git add database/ecommerce_database_v1.db
           git add R/data_pipeline_render.pdf
 
       - name: Commit files
