@@ -816,6 +816,7 @@ dbGetQuery(my_connection,
 
 
 >>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+
 SQL version
 1. Top 10 Products - Overall (Quantity)
 ```{r}
