@@ -30,6 +30,10 @@ jobs:
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
+      - name: Install TinyTeX
+        run: |
+          quarto install tinytex
+
       - name: Render .qmd file to PDF
         run: |
           quarto render R/data_pipeline_render.qmd --to pdf
@@ -38,12 +42,12 @@ jobs:
         run: |
           git config --global user.email "vignesh.parthasarathy@warwick.ac.uk"
           git config --global user.name "Vickyyyy98"
-          git add ../database/ecommerce_database.db
+          git add database/ecommerce_database_v1.db
           git add R/data_pipeline_render.pdf
 
       - name: Commit files
         run: |
-          git commit -m "Mock Data and PDF Upload" || echo "No changes to commit"
+          git commit -m "Database and PDF Upload" || echo "No changes to commit"
 
       - name: Push changes
         uses: ad-m/github-push-action@v0.6.0
