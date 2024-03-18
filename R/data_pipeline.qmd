@@ -334,10 +334,6 @@ dbGetQuery(my_connection,"SELECT * FROM CUSTOMERS;")
 ```
 
 
-```{r}
-dbExecute(my_connection,"DELETE FROM CUSTOMERS;")
-```
-
 2. PRODUCT_CATEGORY 
 
 ```{r}
@@ -386,10 +382,6 @@ my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_datab
 dbGetQuery(my_connection,"SELECT * FROM PRODUCT_CATEGORY;")
 ```
 
-
-```{r}
-#dbExecute(my_connection,"DELETE FROM PRODUCT_CATEGORY;")
-```
 
 SUPPLIERS
 
@@ -488,10 +480,6 @@ my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_datab
 dbGetQuery(my_connection,"SELECT * FROM GIFT_CARD;")
 ```
 
-```{r}
-#dbExecute(my_connection,"DELETE FROM GIFT_CARD;")
-```
-
 PRODUCTS
 
 ```{r}
@@ -541,10 +529,6 @@ my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_datab
 dbGetQuery(my_connection,"SELECT * FROM PRODUCTS;")
 ```
 
-
-```{r}
-#dbExecute(my_connection,"DELETE FROM PRODUCTS;")
-```
 
 ORDER
 
@@ -599,10 +583,6 @@ dbGetQuery(my_connection,"SELECT * FROM ORDERS;")
 ```
 
 
-```{r}
-#dbExecute(my_connection,"DELETE FROM SUPPLIERS;")
-```
-
 SHIPMENTS
 
 ```{r}
@@ -647,9 +627,6 @@ my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_datab
 dbGetQuery(my_connection,"SELECT * FROM SHIPMENT;")
 ```
 
-```{r}
-dbExecute(my_connection,"DELETE FROM SHIPMENT;")
-```
 1. Top 10 Products - Overall (Quantity)
 2. Top 5 Categories (Quantity)
 3. Top 3 Products across categories (Total Amount)
@@ -686,7 +663,12 @@ ggplot(top_3_products, aes(x = reorder(product_name, total_amount), y = total_am
         legend.text = element_text(size = 10))
 ```
 
+<<<<<<< HEAD
+
+=======
 4. Average delivery time for orders across top 5 delivery suppliers
+>>>>>>> d065673478773d9575d62ba440477f02d2d07c48
+
 5. Top 20 Average Spending across customers
 6. Top 20 cancelled orders for which category
 ```{r}
@@ -797,6 +779,7 @@ dbGetQuery(my_connection,
 SQL version
 1. Top 10 Products - Overall (Quantity)
 ```{r}
+
 dbGetQuery(my_connection,
            "SELECT 
               ORDERS.product_id,
@@ -813,6 +796,7 @@ dbGetQuery(my_connection,
 
 2. Top 5 Categories (Quantity)
 ```{r}
+
 dbGetQuery(my_connection,
            "SELECT 
               cat_name as category,
@@ -829,6 +813,7 @@ dbGetQuery(my_connection,
 
 3. Top 3 Products across categories (Total Amount)
 ```{r}
+
 dbGetQuery(my_connection,
            "WITH product AS (
               SELECT
@@ -862,10 +847,12 @@ dbGetQuery(my_connection,
               total_amount
             FROM rnk
             WHERE rnk IN (1,2,3);")
+
 ```
 
 4. Average delivery time for orders across top 5 delivery suppliers
 ```{r}
+
 dbGetQuery(my_connection,
            "SELECT 
                sup.supplier_id,
@@ -879,10 +866,12 @@ dbGetQuery(my_connection,
            GROUP BY sup.supplier_id, sup.supplier_name
            ORDER BY delivery_time DESC, supplier_name
            LIMIT 5;")
+
 ```
 
 5. Top 20 Average Spending across customers
 ```{r}
+
 dbGetQuery(my_connection,
            "SELECT
               o.customer_id as customer_id,
@@ -897,10 +886,12 @@ dbGetQuery(my_connection,
             ORDER BY avg_amount DESC
             limit 20
            ;")
+
 ```
 
 6. Top 20 cancelled orders for which category
 ```{r}
+
 dbGetQuery(my_connection,
            "SELECT
               cat_name,
@@ -912,10 +903,12 @@ dbGetQuery(my_connection,
             GROUP BY cat_name
             ORDER BY total_cancelled DESC
            ;")
+
 ```
 
 7. Average number of orders across time
 ```{r}
+
 dbGetQuery(my_connection,
            "SELECT
               order_timestamp as date,
@@ -925,10 +918,12 @@ dbGetQuery(my_connection,
             GROUP BY order_timestamp
             ORDER BY date
            ;")
+
 ```
 
 8. Scatter plot for revenue across quantity; color by category
 ```{r}
+
 revenue_quantity <- dbGetQuery(my_connection,
            "SELECT
               cat_name,
@@ -948,6 +943,7 @@ ggplot(revenue_quantity, aes(x = quantity, y = amount, color = cat_name)) +
        x = "Quantity",
        y = "Amount") +
   theme(legend.position = "right")
+
 ```
 
 
