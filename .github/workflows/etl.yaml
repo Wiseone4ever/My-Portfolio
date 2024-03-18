@@ -12,39 +12,43 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
       - name: Setup R environment
         uses: r-lib/actions/setup-r@v2
         with:
           r-version: '4.2.0'
+
       - name: Cache R packages
         uses: actions/cache@v2
         with:
           path: ${{ env.R_LIBS_USER }}
-          key: ${{ runner.os }}-r-${{ hashFiles('**/lockfile') }}
-          restore-keys: |
-            ${{ runner.os }}-r-
-      - name: Install packages
-        if: steps.cache.outputs.cache-hit != 'true'
+          key: ${{ runner.os }}-r-${{ hashFiles('**/DESCRIPTION', '**/*.R', '**/*.qmd') }}
+          restore-keys: ${{ runner.os }}-r-
+
+      - name: Install R dependencies
         run: |
-          Rscript -e 'install.packages(c("ggplot2","dplyr","readr","RSQLite","lubridate"))'
-      - name: Install Quarto
+          Rscript -e 'install.packages(c("dplyr","readr","RSQLite","lubridate","rmarkdown","DBI"))'
+
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Render .qmd file
         run: |
-          curl -LO https://github.com/quarto-dev/quarto-cli/releases/latest/download/quarto-linux-amd64.deb
-          sudo dpkg -i quarto-linux-amd64.deb
-      - name: Execute R script
-        run: |
-         Rscript R/load_data.R
+          quarto render R/data_pipeline_render.qmd
+
       - name: Add files
         run: |
           git config --global user.email "vignesh.parthasarathy@warwick.ac.uk"
           git config --global user.name "Vickyyyy98"
-          git add database/ecommerce_databse.db
+          git add ../database/ecommerce_databse.db
+          git add R/data_pipeline_render.pdf
+
       - name: Commit files
         run: |
-          git commit -m "Mock Data Upload"
+          git commit -m "Mock Data Upload" || echo "No changes to commit"
+
       - name: Push changes
         uses: ad-m/github-push-action@v0.6.0
         with:
-            github_token: ${{ secrets.GITHUB_TOKEN }}
-            branch: main
-
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main
