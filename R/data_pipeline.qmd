@@ -288,13 +288,7 @@ orders_df <- generate_shipment_ids(orders_df)
                                    , Sys.Date() - days(sample(1:14, 1))
                                    , dispatch_timestamp),
       delivered_timestamp = if_else(status == "Out for Delivery"
-                                    , NA_Date_, delivered_timestamp),
-      
-      # If status is 'Delivered', both dates should be in the past
-      #, with delivered after dispatched
-      delivered_timestamp = if_else(status == "Delivered"
-                              , dispatch_timestamp + days(sample(1:14, 1))
-                              , delivered_timestamp + days(sample(1:14, 1)))
+                                    , NA_Date_, delivered_timestamp)
     )
   
 write_csv(orders_df,"datasets/ORDERS.csv")
