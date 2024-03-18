@@ -668,6 +668,7 @@ ggplot(top_3_products, aes(x = reorder(product_name, total_amount), y = total_am
 =======
 4. Average delivery time for orders across top 5 delivery suppliers
 >>>>>>> d065673478773d9575d62ba440477f02d2d07c48
+
 5. Top 20 Average Spending across customers
 6. Top 20 cancelled orders for which category
 ```{r}
@@ -700,6 +701,7 @@ ggplot(cancelled_orders_by_category, aes(x = reorder(cat_name, n), y = n, fill =
 SQL version
 1. Top 10 Products - Overall (Quantity)
 ```{r}
+
 dbGetQuery(my_connection,
            "SELECT 
               ORDERS.product_id,
@@ -716,6 +718,7 @@ dbGetQuery(my_connection,
 
 2. Top 5 Categories (Quantity)
 ```{r}
+
 dbGetQuery(my_connection,
            "SELECT 
               cat_name as category,
@@ -732,6 +735,7 @@ dbGetQuery(my_connection,
 
 3. Top 3 Products across categories (Total Amount)
 ```{r}
+
 dbGetQuery(my_connection,
            "WITH product AS (
               SELECT
@@ -765,10 +769,12 @@ dbGetQuery(my_connection,
               total_amount
             FROM rnk
             WHERE rnk IN (1,2,3);")
+
 ```
 
 4. Average delivery time for orders across top 5 delivery suppliers
 ```{r}
+
 dbGetQuery(my_connection,
            "SELECT 
                sup.supplier_id,
@@ -782,10 +788,12 @@ dbGetQuery(my_connection,
            GROUP BY sup.supplier_id, sup.supplier_name
            ORDER BY delivery_time DESC, supplier_name
            LIMIT 5;")
+
 ```
 
 5. Top 20 Average Spending across customers
 ```{r}
+
 dbGetQuery(my_connection,
            "SELECT
               o.customer_id as customer_id,
@@ -800,10 +808,12 @@ dbGetQuery(my_connection,
             ORDER BY avg_amount DESC
             limit 20
            ;")
+
 ```
 
 6. Top 20 cancelled orders for which category
 ```{r}
+
 dbGetQuery(my_connection,
            "SELECT
               cat_name,
@@ -815,10 +825,12 @@ dbGetQuery(my_connection,
             GROUP BY cat_name
             ORDER BY total_cancelled DESC
            ;")
+
 ```
 
 7. Average number of orders across time
 ```{r}
+
 dbGetQuery(my_connection,
            "SELECT
               order_timestamp as date,
@@ -828,10 +840,12 @@ dbGetQuery(my_connection,
             GROUP BY order_timestamp
             ORDER BY date
            ;")
+
 ```
 
 8. Scatter plot for revenue across quantity; color by category
 ```{r}
+
 revenue_quantity <- dbGetQuery(my_connection,
            "SELECT
               cat_name,
@@ -851,6 +865,7 @@ ggplot(revenue_quantity, aes(x = quantity, y = amount, color = cat_name)) +
        x = "Quantity",
        y = "Amount") +
   theme(legend.position = "right")
+
 ```
 
 
