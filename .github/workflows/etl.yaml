@@ -33,7 +33,6 @@ jobs:
       - name: Install TinyTeX
         run: |
           quarto install tinytex
-          tinytex::tlmgr_install('pdflatex')
 
       - name: Render .qmd file to PDF
         run: |
