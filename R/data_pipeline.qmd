@@ -331,10 +331,6 @@ dbGetQuery(my_connection,"SELECT * FROM CUSTOMERS;")
 ```
 
 
-```{r}
-dbExecute(my_connection,"DELETE FROM CUSTOMERS;")
-```
-
 2. PRODUCT_CATEGORY 
 
 ```{r}
@@ -383,10 +379,6 @@ my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_datab
 dbGetQuery(my_connection,"SELECT * FROM PRODUCT_CATEGORY;")
 ```
 
-
-```{r}
-#dbExecute(my_connection,"DELETE FROM PRODUCT_CATEGORY;")
-```
 
 SUPPLIERS
 
@@ -485,10 +477,6 @@ my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_datab
 dbGetQuery(my_connection,"SELECT * FROM GIFT_CARD;")
 ```
 
-```{r}
-#dbExecute(my_connection,"DELETE FROM GIFT_CARD;")
-```
-
 PRODUCTS
 
 ```{r}
@@ -538,10 +526,6 @@ my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_datab
 dbGetQuery(my_connection,"SELECT * FROM PRODUCTS;")
 ```
 
-
-```{r}
-#dbExecute(my_connection,"DELETE FROM PRODUCTS;")
-```
 
 ORDER
 
@@ -596,10 +580,6 @@ dbGetQuery(my_connection,"SELECT * FROM ORDERS;")
 ```
 
 
-```{r}
-#dbExecute(my_connection,"DELETE FROM SUPPLIERS;")
-```
-
 SHIPMENTS
 
 ```{r}
@@ -644,9 +624,6 @@ my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_datab
 dbGetQuery(my_connection,"SELECT * FROM SHIPMENT;")
 ```
 
-```{r}
-dbExecute(my_connection,"DELETE FROM SHIPMENT;")
-```
 1. Top 10 Products - Overall (Quantity)
 2. Top 5 Categories (Quantity)
 3. Top 3 Products across categories (Total Amount)
@@ -683,9 +660,6 @@ ggplot(top_3_products, aes(x = reorder(product_name, total_amount), y = total_am
   theme(legend.title = element_text(size = 12),
         legend.text = element_text(size = 10))
 ```
-
-
-
 
 
 5. Top 20 Average Spending across customers
