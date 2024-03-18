@@ -622,10 +622,7 @@ ingest_shipment_data <- function(df) {
 ingest_shipment_data(shipment_df)
 ```
 
-```{r}
-my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
-dbGetQuery(my_connection,"SELECT * FROM SHIPMENT;")
-```
+
 
 1. Top 10 Products - Overall (Quantity)
 2. Top 5 Categories (Quantity)
@@ -671,32 +668,14 @@ ggplot(top_3_products, aes(x = reorder(product_name, total_amount), y = total_am
 
 5. Top 20 Average Spending across customers
 6. Top 20 cancelled orders for which category
-```{r}
-# Join orders with products and then with categories to get category information
-orders_with_categories <- orders_df %>%
-  inner_join(products_df, by = "product_id") %>%
-  inner_join(category_df, by = "category_id")
-
-# Filter for cancelled orders and count by category
-cancelled_orders_by_category <- orders_with_categories %>%
-  filter(order_status == "Cancelled") %>%
-  count(cat_name) %>%
-  arrange(desc(n)) %>%
-  top_n(20, n)
-
-# Visualization
-ggplot(cancelled_orders_by_category, aes(x = reorder(cat_name, n), y = n, fill = cat_name)) +
-  geom_bar(stat = "identity") +
-  coord_flip() +
-  labs(title = "Top 20 Cancelled Orders by Category",
-       x = "Category Name",
-       y = "Number of Cancelled Orders") +
-  theme_minimal() +
-  theme(legend.position = "none")
-```
-
 7. Average number of orders across time
 8. Scatter plot for revenue across quantity; color by category
+
+
+```{r}
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "database/ecommerce_database_v1.db")
+dbGetQuery(my_connection,"SELECT * FROM SHIPMENT;")
+```
 
 SQL version
 1. Top 10 Products - Overall (Quantity)
@@ -741,7 +720,7 @@ WHERE rnk IN (1,2,3)
 3. Top 3 Products across categories (Total Amount)
 ```{r}
 # Define the SQL query
-query <- "
+query_3 <- "
 SELECT
     pc.cat_name,
     p.product_name,
@@ -758,7 +737,7 @@ LIMIT 3
 
 ```{r}
 # Execute the query and store the result in a data frame
-top_products_df <- dbGetQuery(my_connection, query)
+top_products_df <- dbGetQuery(my_connection, query_3)
 
 # Get overall top 3 products
 top_3_products <- product_amounts_with_category_name %>%
@@ -821,20 +800,33 @@ dbGetQuery(my_connection,
 
 6. Top 20 cancelled orders for which category
 ```{r}
-
-dbGetQuery(my_connection,
-           "SELECT
-              cat_name,
-              COUNT(o.quantity) as total_cancelled
-            FROM ORDERS as o
-            JOIN PRODUCTS as p ON p.product_id = o.product_id
-            JOIN PRODUCT_CATEGORY as pc on pc.category_id = p.category_id
-            WHERE LOWER(order_status) = 'cancelled'
-            GROUP BY cat_name
-            ORDER BY total_cancelled DESC
-           ;")
-
+query_6 <- "
+            SELECT
+               pc.cat_name,
+               COUNT(o.quantity) as total_cancelled
+             FROM ORDERS as o
+             JOIN PRODUCTS as p ON p.product_id = o.product_id
+             JOIN PRODUCT_CATEGORY as pc on pc.category_id = p.category_id
+             WHERE LOWER(order_status) = 'cancelled'
+             GROUP BY pc.cat_name
+             ORDER BY total_cancelled DESC"
 ```
+
+```{r}
+# Execute the query and store the result in a data frame
+cancelled_df <- dbGetQuery(my_connection, query_6)
+
+# Visualization
+ggplot(cancelled_df, aes(x = reorder(cat_name, total_cancelled), y = total_cancelled, fill = cat_name)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Top 20 Cancelled Orders by Category",
+       x = "Category Name",
+       y = "Number of Cancelled Orders") +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
 
 7. Average number of orders across time
 ```{r}
