@@ -716,6 +716,84 @@ ggplot(cancelled_orders_by_category, aes(x = reorder(cat_name, n), y = n, fill =
 7. Average number of orders across time
 8. Scatter plot for revenue across quantity; color by category
 
+Foreign Key Check
+ORDERS
+customer_id check
+```{r}
+dbGetQuery(my_connection,
+           "SELECT 
+              DISTINCT o.customer_id as customer_id,
+              c.customer_id as customer_id,
+              first_name ||' '|| last_name as customer_name
+           FROM ORDERS as o
+           LEFT JOIN CUSTOMERS as c ON c.customer_id = o.customer_id
+           ;")
+```
+
+product_id check
+```{r}
+dbGetQuery(my_connection,
+           "SELECT 
+              DISTINCT o.product_id as product_id,
+              p.product_id as product_id,
+              product_name as product_name
+           FROM ORDERS as o
+           LEFT JOIN PRODUCTS as p ON o.product_id = p.product_id
+           ;")
+```
+
+gift_card_id
+```{r}
+dbGetQuery(my_connection,
+           "SELECT 
+              DISTINCT o.gift_card_id as gif_card_id,
+              g.gift_card_id,
+              gift_card_code
+           FROM ORDERS as o
+           LEFT JOIN GIFT_CARD as g ON g.gift_card_id = o.gift_card_id
+           ;")
+```
+
+shipment_id
+```{r}
+dbGetQuery(my_connection,
+           "SELECT 
+              DISTINCT o.shipment_id as x,
+              s.shipment_id
+           FROM ORDERS as o
+           LEFT JOIN SHIPMENT as s ON s.shipment_id = o.shipment_id
+           ORDER BY o.shipment_id
+           ;")
+```
+
+PRODUCTS
+supplier_id
+```{r}
+dbGetQuery(my_connection,
+           "SELECT 
+              DISTINCT p.supplier_id,
+              s.supplier_id as a,
+              s.supplier_name
+           FROM PRODUCTS as p
+           LEFT JOIN SUPPLIERS as s ON p.supplier_id = s.supplier_id
+           ORDER BY p.supplier_id
+           ;")
+```
+
+category_id
+```{r}
+dbGetQuery(my_connection,
+           "SELECT 
+              DISTINCT p.category_id,
+              c.category_id as c,
+              cat_name
+           FROM PRODUCTS as p
+           LEFT JOIN PRODUCT_CATEGORY as c ON c.category_id = p.category_id
+           ORDER BY p.category_id
+           ;")
+```
+
+
 SQL version
 1. Top 10 Products - Overall (Quantity)
 ```{r}
