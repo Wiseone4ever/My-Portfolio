@@ -722,6 +722,7 @@ SELECT*FROM product
 ```
 
 ```{r}
+#bar chart
 top_10_products <- dbGetQuery(my_connection, query_1)
 
 ggplot(top_10_products,aes(x=product_name,y=total_purchase, fill=product_name))+geom_bar(stat="identity")+labs(x="Product Name", y="Total Number of Purchase")+coord_flip()
@@ -857,6 +858,7 @@ query_7 <- dbGetQuery(my_connection,
 ```
 
 ```{r}
+#Scatter plot
 ggplot(query_7,aes(x=date,y=total_order,group=1))+geom_point(stat="identity")+geom_line(stat="identity")+labs(x="Date",y="Total Number of Order")+theme(axis.text.x=element_text(angle=35))
 
 ```
