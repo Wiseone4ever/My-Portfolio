@@ -970,7 +970,7 @@ query_4 <- dbGetQuery(my_connection,
            LIMIT 5;")
 
 # Plot using ggplot2
-ggplot(query_4, aes(x = reorder(supplier_name, average_delivery_time), y = average_delivery_time, fill = supplier_name)) +
+ggplot(query_4, aes(x = reorder(supplier_name, delivery_time), y = delivery_time, fill = supplier_name)) +
   geom_bar(stat = "identity") +
   coord_flip() +
   labs(title = "Average Delivery Time for Top 5 Delivery Suppliers",
