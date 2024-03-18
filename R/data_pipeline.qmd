@@ -11,11 +11,7 @@ library(RSQLite)
 library(tibble) 
 library(dplyr) 
 library(lubridate)
-library(DBI)
-library(assertthat)
-library(purrr)
-library(ggplot2)
-library(RSQLite)
+#library(ggplot2)
 library(DBI)
 ```
 
