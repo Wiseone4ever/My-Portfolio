@@ -4,10 +4,29 @@ format:
     toc: true
     number-sections: true
     colorlinks: true
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+editor_options: 
+  chunk_output_type: console
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
 ---
 
 
 ```{r}
+<<<<<<< HEAD
+=======
+=======
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = FALSE)
+```
+
+
+```{r, results='hide'}
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
 library(readr)
 library(RSQLite)
 library(tibble) 
@@ -21,11 +40,29 @@ library(RSQLite)
 library(DBI)
 ```
 
+<<<<<<< HEAD
 
 Part 1.2 - SQL Database Schema Creation 
 
 
 ```{r}
+=======
+# Part 1 - Database Design and Implementation
+
+<<<<<<< HEAD
+## Task 1.1: E-R Diagram Design
+=======
+<<<<<<< HEAD
+Part 1.2 - SQL Database Schema Creation 
+=======
+#Part 1.2 - SQL Database Schema Creation 
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> b1b8406d6719cacb0a4998c7b013a6882c5acc9f
+
+## Task 1.2: SQL Database Schema Creation 
+
+```{r, results='hide'}
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
 
 #setwd("/cloud/project/")
 print(getwd())
@@ -139,7 +176,13 @@ dbGetQuery(my_connection,
 
 ```
 
+<<<<<<< HEAD
 #Generate Data
+=======
+# Part 2: Data Generation and Management 
+
+## Task 2.1: Synthetic Data Generation
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
 
 ```{r}
 ## Find all files matching the pattern
@@ -250,7 +293,11 @@ orders_df <- generate_shipment_ids(orders_df)
       
       # Delivered date should be after the dispatch date; 
       #here I assume delivery takes between 2 to 5 days
+<<<<<<< HEAD
       delivered_timestamp = dispatch_timestamp + days(sample(2:5, n()
+=======
+      delivered_timestamp = dispatch_timestamp + days(sample(2:14, n()
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
                                                              , replace = TRUE)),
       
       # Randomly assign a delivery status
@@ -303,11 +350,23 @@ write_csv(shipment_df,"../datasets/SHIPMENTS.csv")
 
 ```
 
+<<<<<<< HEAD
 Data Validation and Ingestion
 
 1.CUSTOMERS
 
 ```{r}
+=======
+## Task 2.2: Data Import and Quality Assurance
+
+1.CUSTOMERS
+
+<<<<<<< HEAD
+```{r}
+=======
+```{r, results = 'hide'}
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
 ingest_customer_data <- function(df) {
   
   my_connection <- RSQLite::dbConnect(RSQLite::SQLite()
@@ -377,17 +436,42 @@ for(file in customer_files) {
 ```
 
 ```{r}
+<<<<<<< HEAD
 my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
 dbGetQuery(my_connection,"SELECT * FROM CUSTOMERS;")
+=======
+<<<<<<< HEAD
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
+dbGetQuery(my_connection,"SELECT * FROM CUSTOMERS;")
+=======
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite()
+                                    , "../database/ecommerce_database_v1.db")
+dbGetQuery(my_connection,"SELECT * FROM CUSTOMERS LIMIT 10;")
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
 ```
 
 
 2. PRODUCT_CATEGORY 
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
 ```{r}
 ingest_product_category <- function(df) {
   
   my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
+<<<<<<< HEAD
+=======
+=======
+```{r, results = 'hide'}
+ingest_product_category <- function(df) {
+  
+  my_connection <- RSQLite::dbConnect(RSQLite::SQLite()
+                                      , "../database/ecommerce_database_v1.db")
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
 
   # Check for null values in NOT NULL columns
   required_columns <- c("category_id", "cat_name")
@@ -396,6 +480,10 @@ ingest_product_category <- function(df) {
   # Insert validated data into the database
   for(i in 1:nrow(df)){
     # Check for duplicate records based on the primary key
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
     existing_ids <- dbGetQuery(my_connection, sprintf("SELECT category_id FROM PRODUCT_CATEGORY WHERE category_id = '%s'", df$category_id[i]))
     if(nrow(existing_ids) > 0) {
       cat(sprintf("Skipping duplicate entry for category_id: %s\n", df$category_id[i]))
@@ -403,6 +491,21 @@ ingest_product_category <- function(df) {
     }
     
     insert_query <- sprintf("INSERT INTO PRODUCT_CATEGORY (category_id, cat_name) VALUES ('%s', '%s')",
+<<<<<<< HEAD
+=======
+=======
+    existing_ids <- dbGetQuery(my_connection, sprintf("SELECT category_id FROM 
+                PRODUCT_CATEGORY WHERE category_id = '%s'", df$category_id[i]))
+    if(nrow(existing_ids) > 0) {
+      cat(sprintf("Skipping duplicate entry for category_id: %s\n"
+                  , df$category_id[i]))
+      next
+    }
+    
+    insert_query <- sprintf("INSERT INTO PRODUCT_CATEGORY 
+                            (category_id, cat_name) VALUES ('%s', '%s')",
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
                             df$category_id[i], df$cat_name[i])
     tryCatch({
       dbExecute(my_connection, insert_query)
@@ -426,13 +529,28 @@ for(file in category_files) {
 
 
 ```{r}
+<<<<<<< HEAD
 my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
 dbGetQuery(my_connection,"SELECT * FROM PRODUCT_CATEGORY;")
+=======
+<<<<<<< HEAD
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
+dbGetQuery(my_connection,"SELECT * FROM PRODUCT_CATEGORY;")
+=======
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), 
+                                    "../database/ecommerce_database_v1.db")
+dbGetQuery(my_connection,"SELECT * FROM PRODUCT_CATEGORY LIMIT 10;")
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
 ```
 
 
 SUPPLIERS
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
 ```{r}
 ingest_suppliers <- function(df) {
   
@@ -440,6 +558,20 @@ ingest_suppliers <- function(df) {
 
   # Email format validation
   valid_email <- grepl("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", df$supplier_email)
+<<<<<<< HEAD
+=======
+=======
+```{r, results = 'hide'}
+ingest_suppliers <- function(df) {
+  
+  my_connection <- RSQLite::dbConnect(RSQLite::SQLite()
+                                      , "../database/ecommerce_database_v1.db")
+
+  # Email format validation
+  valid_email <- grepl("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", 
+                       df$supplier_email)
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
   df <- df[valid_email, ]
   
   # Check for null values in NOT NULL columns
@@ -448,6 +580,10 @@ ingest_suppliers <- function(df) {
   
   for(i in 1:nrow(df)){
     # Check for duplicate records based on the primary key
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
     existing_supplier_ids <- dbGetQuery(my_connection, sprintf("SELECT supplier_id FROM SUPPLIERS WHERE supplier_id = '%s'", df$supplier_id[i]))
     if(nrow(existing_supplier_ids) > 0) {
       cat(sprintf("Skipping duplicate entry for supplier_id: %s\n", df$supplier_id[i]))
@@ -456,6 +592,26 @@ ingest_suppliers <- function(df) {
     
     insert_query <- sprintf("INSERT INTO SUPPLIERS (supplier_id, supplier_name, supplier_address, supplier_phone, supplier_email) VALUES ('%s', '%s', '%s', '%s', '%s')",
                             df$supplier_id[i], df$supplier_name[i], df$supplier_address[i], df$supplier_phone[i], df$supplier_email[i])
+<<<<<<< HEAD
+=======
+=======
+    existing_supplier_ids <- dbGetQuery(my_connection
+              , sprintf("SELECT supplier_id FROM SUPPLIERS 
+                        WHERE supplier_id = '%s'", df$supplier_id[i]))
+    if(nrow(existing_supplier_ids) > 0) {
+      cat(sprintf("Skipping duplicate entry for supplier_id: %s\n"
+                  , df$supplier_id[i]))
+      next
+    }
+    
+    insert_query <- sprintf("INSERT INTO SUPPLIERS (supplier_id, supplier_name, 
+                            supplier_address, supplier_phone, supplier_email) 
+                            VALUES ('%s', '%s', '%s', '%s', '%s')",
+                            df$supplier_id[i], df$supplier_name[i], 
+                            df$supplier_address[i], df$supplier_phone[i], 
+                            df$supplier_email[i])
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
     tryCatch({
       dbExecute(my_connection, insert_query)
       cat(sprintf("Successfully inserted row: %d\n", i))
@@ -479,11 +635,26 @@ for(file in suppliers_files) {
 
 GIFT CARDS
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
 ```{r}
 
 ingest_gift_card_data <- function(df) {
   
   my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
+<<<<<<< HEAD
+=======
+=======
+```{r, results = 'hide'}
+
+ingest_gift_card_data <- function(df) {
+  
+  my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), 
+                                      "../database/ecommerce_database_v1.db")
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
 
   # Validate 'gift_card_id' and 'gift_card_code' for null values
   required_columns <- c("gift_card_id", "gift_card_code", "status")
@@ -495,6 +666,10 @@ ingest_gift_card_data <- function(df) {
   # Insert validated data into the database
   for(i in 1:nrow(df)){
     # Check for duplicate records based on the primary key
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
     existing_ids <- dbGetQuery(my_connection, sprintf("SELECT gift_card_id FROM GIFT_CARD WHERE gift_card_id = '%s'", df$gift_card_id[i]))
     if(nrow(existing_ids) > 0) {
       cat(sprintf("Skipping duplicate entry for gift_card_id: %s\n", df$gift_card_id[i]))
@@ -503,6 +678,22 @@ ingest_gift_card_data <- function(df) {
     
     insert_query <- sprintf("INSERT INTO GIFT_CARD (gift_card_id, gift_card_code, detail, status) VALUES ('%s', '%s', %f, '%s')",
                             df$gift_card_id[i], df$gift_card_code[i], df$detail[i], df$status[i])
+<<<<<<< HEAD
+=======
+=======
+    existing_ids <- dbGetQuery(my_connection, sprintf("SELECT gift_card_id FROM
+                    GIFT_CARD WHERE gift_card_id = '%s'", df$gift_card_id[i]))
+    if(nrow(existing_ids) > 0) {
+      cat(sprintf("Skipping duplicate entry for gift_card_id: %s\n", 
+                  df$gift_card_id[i]))
+      next
+    }
+    
+    insert_query <- sprintf("INSERT INTO GIFT_CARD (gift_card_id, 
+              gift_card_code, detail, status) VALUES ('%s', '%s', %f, '%s')",
+          df$gift_card_id[i], df$gift_card_code[i], df$detail[i], df$status[i])
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
     tryCatch({
       dbExecute(my_connection, insert_query)
       cat(sprintf("Successfully inserted row: %d\n", i))
@@ -523,21 +714,50 @@ for(file in gift_card_files) {
 
 ```
 
+<<<<<<< HEAD
 ```{r}
 my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
+=======
+<<<<<<< HEAD
+```{r}
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
+=======
+```{r, results = 'hide'}
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite()
+                                    , "../database/ecommerce_database_v1.db")
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
 dbGetQuery(my_connection,"SELECT * FROM GIFT_CARD;")
 ```
 
 PRODUCTS
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
 ```{r}
 ingest_products <- function(df) {
   
   my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
+<<<<<<< HEAD
+=======
+=======
+```{r, results = 'hide'}
+ingest_products <- function(df) {
+  
+  my_connection <- RSQLite::dbConnect(RSQLite::SQLite()
+                                      , "../database/ecommerce_database_v1.db")
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
   # Data type checks
   df$stock_quantity <- as.integer(df$stock_quantity)
   
   # Check for null values in NOT NULL columns
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
   required_columns <- c("product_id", "stock_quantity", "category_id", "supplier_id")
   df <- df[!rowSums(is.na(df[required_columns])) > 0, ]
   
@@ -546,12 +766,43 @@ ingest_products <- function(df) {
     existing_product_ids <- dbGetQuery(my_connection, sprintf("SELECT product_id FROM PRODUCTS WHERE product_id = '%s'", df$product_id[i]))
     if(nrow(existing_product_ids) > 0) {
       cat(sprintf("Skipping duplicate entry for product_id: %s\n", df$product_id[i]))
+<<<<<<< HEAD
+=======
+=======
+  required_columns <- c("product_id", "stock_quantity"
+                        , "category_id", "supplier_id")
+  df <- df[!rowSums(is.na(df[required_columns])) > 0, ]
+  
+  for(i in 1:nrow(df)){
+    # Check for duplicate records based on the primary key and 
+    #foreign key constraints
+    existing_product_ids <- dbGetQuery(my_connection
+    , sprintf("SELECT product_id FROM PRODUCTS WHERE product_id = '%s'"
+              , df$product_id[i]))
+    if(nrow(existing_product_ids) > 0) {
+      cat(sprintf("Skipping duplicate entry for product_id: %s\n"
+                  , df$product_id[i]))
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
       next
     }
     
     # Construct and execute the insertion query
+<<<<<<< HEAD
     insert_query <- sprintf("INSERT INTO PRODUCTS (product_id, product_name, price, stock_quantity, category_id, supplier_id) VALUES ('%s', '%s', %f, %d, '%s', '%s')",
                             df$product_id[i], df$product_name[i], df$price[i], df$stock_quantity[i], df$category_id[i], df$supplier_id[i])
+=======
+<<<<<<< HEAD
+    insert_query <- sprintf("INSERT INTO PRODUCTS (product_id, product_name, price, stock_quantity, category_id, supplier_id) VALUES ('%s', '%s', %f, %d, '%s', '%s')",
+                            df$product_id[i], df$product_name[i], df$price[i], df$stock_quantity[i], df$category_id[i], df$supplier_id[i])
+=======
+    insert_query <- sprintf("INSERT INTO PRODUCTS (product_id, product_name, 
+                            price, stock_quantity, category_id, supplier_id) 
+                            VALUES ('%s', '%s', %f, %d, '%s', '%s')",
+                            df$product_id[i], df$product_name[i], df$price[i]
+                  , df$stock_quantity[i], df$category_id[i], df$supplier_id[i])
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
     tryCatch({
       dbExecute(my_connection, insert_query)
       cat(sprintf("Successfully inserted row: %d\n", i))
@@ -573,17 +824,42 @@ for(file in products_files) {
 ```
 
 ```{r}
+<<<<<<< HEAD
 my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
 dbGetQuery(my_connection,"SELECT * FROM PRODUCTS;")
+=======
+<<<<<<< HEAD
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
+dbGetQuery(my_connection,"SELECT * FROM PRODUCTS;")
+=======
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite()
+                                    , "../database/ecommerce_database_v1.db")
+dbGetQuery(my_connection,"SELECT * FROM PRODUCTS LIMIT 10;")
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
 ```
 
 
 ORDER
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
 ```{r}
 ingest_orders <- function(df) {
   
   my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
+<<<<<<< HEAD
+=======
+=======
+```{r, results = 'hide'}
+ingest_orders <- function(df) {
+  
+  my_connection <- RSQLite::dbConnect(RSQLite::SQLite()
+                                      , "../database/ecommerce_database_v1.db")
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
 
   # Essential columns for validation
   required_columns <- c("order_id", "order_status", "quantity")
@@ -591,21 +867,63 @@ ingest_orders <- function(df) {
   
   for(i in 1:nrow(df)) {
     # Check for duplicate order_id
+<<<<<<< HEAD
     existing_ids <- dbGetQuery(my_connection, sprintf("SELECT order_id FROM ORDERS WHERE order_id = '%s'", df$order_id[i]))
     if(nrow(existing_ids) > 0) {
       cat(sprintf("Skipping duplicate entry for order_id: %s\n", df$order_id[i]))
+=======
+<<<<<<< HEAD
+    existing_ids <- dbGetQuery(my_connection, sprintf("SELECT order_id FROM ORDERS WHERE order_id = '%s'", df$order_id[i]))
+    if(nrow(existing_ids) > 0) {
+      cat(sprintf("Skipping duplicate entry for order_id: %s\n", df$order_id[i]))
+=======
+    existing_ids <- dbGetQuery(my_connection
+                  , sprintf("SELECT order_id FROM ORDERS WHERE order_id = '%s'"
+                            , df$order_id[i]))
+    if(nrow(existing_ids) > 0) {
+      cat(sprintf("Skipping duplicate entry for order_id: %s\n"
+                  , df$order_id[i]))
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
       next
     }
 
     # Data validation for quantity
     if(!is.numeric(df$quantity[i]) || df$quantity[i] <= 0) {
+<<<<<<< HEAD
       cat(sprintf("Skipping entry due to invalid quantity for order_id: %s\n", df$order_id[i]))
+=======
+<<<<<<< HEAD
+      cat(sprintf("Skipping entry due to invalid quantity for order_id: %s\n", df$order_id[i]))
+=======
+      cat(sprintf("Skipping entry due to invalid quantity for order_id: %s\n"
+                  , df$order_id[i]))
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
       next
     }
 
     # Insert validated data into the database
+<<<<<<< HEAD
     insert_query <- sprintf("INSERT INTO ORDERS (order_id, customer_id, product_id, shipment_id, gift_card_id, payment_method, quantity, order_timestamp, payment_timestamp, order_status) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', '%s', '%s')",
                             df$order_id[i], df$customer_id[i], df$product_id[i], df$shipment_id[i], df$gift_card_id[i], df$payment_method[i], df$quantity[i], df$order_timestamp[i], df$payment_timestamp[i], df$order_status[i])
+=======
+<<<<<<< HEAD
+    insert_query <- sprintf("INSERT INTO ORDERS (order_id, customer_id, product_id, shipment_id, gift_card_id, payment_method, quantity, order_timestamp, payment_timestamp, order_status) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', '%s', '%s')",
+                            df$order_id[i], df$customer_id[i], df$product_id[i], df$shipment_id[i], df$gift_card_id[i], df$payment_method[i], df$quantity[i], df$order_timestamp[i], df$payment_timestamp[i], df$order_status[i])
+=======
+    insert_query <- sprintf("INSERT INTO ORDERS (order_id, customer_id, 
+                            product_id, shipment_id, gift_card_id, payment_method, 
+                            quantity, order_timestamp, payment_timestamp, 
+                            order_status) VALUES ('%s', '%s', '%s', '%s', '%s', 
+                            '%s', %d, '%s', '%s', '%s')",
+                            df$order_id[i], df$customer_id[i], df$product_id[i], 
+                            df$shipment_id[i], df$gift_card_id[i], 
+                            df$payment_method[i], df$quantity[i], 
+                            df$order_timestamp[i], 
+                            df$payment_timestamp[i], df$order_status[i])
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
     tryCatch({
       dbExecute(my_connection, insert_query)
       cat(sprintf("Successfully inserted row: %d\n", i))
@@ -626,17 +944,33 @@ ingest_orders(orders_df)
 
 
 ```{r}
+<<<<<<< HEAD
 my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
 dbGetQuery(my_connection,"SELECT * FROM ORDERS;")
+=======
+<<<<<<< HEAD
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
+dbGetQuery(my_connection,"SELECT * FROM ORDERS;")
+=======
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite()
+                                    , "../database/ecommerce_database_v1.db")
+dbGetQuery(my_connection,"SELECT * FROM ORDERS LIMIT 10;")
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
 ```
 
 
 SHIPMENTS
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
 ```{r}
 ingest_shipment_data <- function(df) {
   
   my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
+<<<<<<< HEAD
   # Validate 'shipment_id' and 'status' for null values
   required_columns <- c("shipment_id", "status")
   df <- df[!rowSums(is.na(df[required_columns])) > 0, ]
@@ -644,10 +978,27 @@ ingest_shipment_data <- function(df) {
   # Convert timestamps to appropriate format
  #df$dispatch_timestamp <- ifelse(is.na(df$dispatch_timestamp), "", df$dispatch_timestamp)
   #df$delivered_timestamp <- ifelse(is.na(df$delivered_timestamp), "", df$delivered_timestamp)
+=======
+=======
+```{r, results = 'hide'}
+ingest_shipment_data <- function(df) {
+  
+  my_connection <- RSQLite::dbConnect(RSQLite::SQLite()
+                                      , "../database/ecommerce_database_v1.db")
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+  # Validate 'shipment_id' and 'status' for null values
+  required_columns <- c("shipment_id", "status")
+  df <- df[!rowSums(is.na(df[required_columns])) > 0, ]
+
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
   
   # Insert validated data into the database
   for(i in 1:nrow(df)){
     # Check for duplicate records based on the primary key
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
     existing_ids <- dbGetQuery(my_connection, sprintf("SELECT shipment_id FROM SHIPMENT WHERE shipment_id = '%s'", df$shipment_id[i]))
     if(nrow(existing_ids) > 0) {
       cat(sprintf("Skipping duplicate entry for shipment_id: %s\n", df$shipment_id[i]))
@@ -656,6 +1007,25 @@ ingest_shipment_data <- function(df) {
     
     insert_query <- sprintf("INSERT INTO SHIPMENT (shipment_id, dispatch_timestamp, delivered_timestamp, status) VALUES ('%s', '%s', '%s', '%s')",
                             df$shipment_id[i], df$dispatch_timestamp[i], df$delivered_timestamp[i], df$status[i])
+<<<<<<< HEAD
+=======
+=======
+    existing_ids <- dbGetQuery(my_connection
+        , sprintf("SELECT shipment_id FROM SHIPMENT WHERE shipment_id = '%s'", 
+                  df$shipment_id[i]))
+    if(nrow(existing_ids) > 0) {
+      cat(sprintf("Skipping duplicate entry for shipment_id: %s\n"
+                  , df$shipment_id[i]))
+      next
+    }
+    
+    insert_query <- sprintf("INSERT INTO SHIPMENT (shipment_id, 
+                        dispatch_timestamp, delivered_timestamp, status) 
+                        VALUES ('%s', '%s', '%s', '%s')",
+                            df$shipment_id[i], df$dispatch_timestamp[i]
+                            , df$delivered_timestamp[i], df$status[i])
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
     tryCatch({
       dbExecute(my_connection, insert_query)
       cat(sprintf("Successfully inserted row: %d\n", i))
@@ -671,10 +1041,119 @@ ingest_shipment_data(shipment_df)
 ```
 
 ```{r}
+<<<<<<< HEAD
 my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
 dbGetQuery(my_connection,"SELECT * FROM SHIPMENT;")
 ```
 
+=======
+<<<<<<< HEAD
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
+dbGetQuery(my_connection,"SELECT * FROM SHIPMENT;")
+=======
+my_connection <- RSQLite::dbConnect(RSQLite::SQLite()
+                                    , "../database/ecommerce_database_v1.db")
+dbGetQuery(my_connection,"SELECT * FROM SHIPMENT LIMIT 10;")
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+```
+
+### Check Referential Integrity
+
+ORDERS
+customer_id check
+```{r}
+dbGetQuery(my_connection,
+           "SELECT 
+              DISTINCT o.customer_id as customer_id,
+              c.customer_id as customer_id,
+              first_name ||' '|| last_name as customer_name
+           FROM ORDERS as o
+           LEFT JOIN CUSTOMERS as c ON c.customer_id = o.customer_id
+           WHERE c.customer_id is NULL
+           ;")
+```
+
+product_id check
+```{r}
+dbGetQuery(my_connection,
+           "SELECT 
+              DISTINCT o.product_id as product_id,
+              p.product_id as product_id,
+              product_name as product_name
+           FROM ORDERS as o
+           LEFT JOIN PRODUCTS as p ON o.product_id = p.product_id
+           WHERE p.product_id is NULL
+           ;")
+```
+
+gift_card_id
+```{r}
+dbGetQuery(my_connection,
+           "SELECT 
+              DISTINCT o.gift_card_id as gif_card_id,
+              g.gift_card_id,
+              gift_card_code
+           FROM ORDERS as o
+           LEFT JOIN GIFT_CARD as g ON g.gift_card_id = o.gift_card_id
+           WHERE o.gift_card_id is NULL
+           ;")
+```
+
+shipment_id
+```{r}
+dbGetQuery(my_connection,
+           "SELECT 
+              DISTINCT o.shipment_id as x,
+              s.shipment_id
+           FROM ORDERS as o
+           LEFT JOIN SHIPMENT as s ON s.shipment_id = o.shipment_id
+           WHERE o.shipment_id is NULL
+           ORDER BY o.shipment_id
+           ;")
+```
+
+PRODUCTS
+supplier_id
+```{r}
+dbGetQuery(my_connection,
+           "SELECT 
+              DISTINCT p.supplier_id,
+              s.supplier_id as a,
+              s.supplier_name
+           FROM PRODUCTS as p
+           LEFT JOIN SUPPLIERS as s ON p.supplier_id = s.supplier_id
+           WHERE s.supplier_id is NULL
+           ORDER BY p.supplier_id
+           ;")
+```
+
+category_id
+```{r}
+dbGetQuery(my_connection,
+           "SELECT 
+              DISTINCT p.category_id,
+              c.category_id as c,
+              cat_name
+           FROM PRODUCTS as p
+           LEFT JOIN PRODUCT_CATEGORY as c ON c.category_id = p.category_id
+           WHERE p.category_id is NULL
+           ORDER BY p.category_id
+           ;")
+```
+
+# Part 3: Data Pipeline Generation 
+
+## Task 3.1: GitHub Repository and Workflow Setup
+
+## Task 3.2: GitHub Actions for Continuous Integration
+
+# Part 4: Data Analysis and Reporting with Quarto in R 
+
+## Task 4.1: Advanced Data Analysis in R
+
+## Task 4.2: Comprehensive Reporting with Quarto
+
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
 1. Top 10 Products - Overall (Quantity)
 2. Top 5 Categories (Quantity)
 3. Top 3 Products across categories (Total Amount)
@@ -700,7 +1179,16 @@ top_3_products <- product_amounts_with_category_name %>%
   ungroup()
 
 # Plot using ggplot2
+<<<<<<< HEAD
 ggplot(top_3_products, aes(x = reorder(product_name, total_amount), y = total_amount, fill = cat_name)) +
+=======
+<<<<<<< HEAD
+ggplot(top_3_products, aes(x = reorder(product_name, total_amount), y = total_amount, fill = cat_name)) +
+=======
+ggplot(top_3_products, aes(x = reorder(product_name, total_amount)
+                           , y = total_amount, fill = cat_name)) +
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
   geom_bar(stat = "identity", position = position_dodge()) +
   coord_flip() +
   labs(title = "Top 3 Products by Total Amount",
@@ -733,7 +1221,16 @@ cancelled_orders_by_category <- orders_with_categories %>%
   top_n(20, n)
 
 # Visualization
+<<<<<<< HEAD
 ggplot(cancelled_orders_by_category, aes(x = reorder(cat_name, n), y = n, fill = cat_name)) +
+=======
+<<<<<<< HEAD
+ggplot(cancelled_orders_by_category, aes(x = reorder(cat_name, n), y = n, fill = cat_name)) +
+=======
+ggplot(cancelled_orders_by_category, 
+       aes(x = reorder(cat_name, n), y = n, fill = cat_name)) +
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
   geom_bar(stat = "identity") +
   coord_flip() +
   labs(title = "Top 20 Cancelled Orders by Category",
@@ -831,7 +1328,15 @@ dbGetQuery(my_connection,
            FROM SHIPMENT AS s
            JOIN ORDERS AS o ON o.shipment_id = s.shipment_id
            JOIN PRODUCTS AS p ON p.product_id = o.product_id
+<<<<<<< HEAD
            JOIN SUPPLIERS AS sup ON sup.supplier_id = p.supplier_id  -- Adjusted this line
+=======
+<<<<<<< HEAD
+           JOIN SUPPLIERS AS sup ON sup.supplier_id = p.supplier_id  -- Adjusted this line
+=======
+           JOIN SUPPLIERS AS sup ON sup.supplier_id = p.supplier_id  
+>>>>>>> 83af47df161d1718e6a3ffa8896826843d366024
+>>>>>>> 8f8f211fa739d06b12fbf27abfaa9d571080052f
            WHERE LOWER(s.status) = 'delivered'
            GROUP BY sup.supplier_id, sup.supplier_name
            ORDER BY delivery_time DESC, supplier_name
