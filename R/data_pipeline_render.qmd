@@ -1299,11 +1299,10 @@ The bar plot reveals that the toy category has the highest number of cancelled o
 7. Average number of orders across time
 
 ```{r}
-
 query_7 <- dbGetQuery(my_connection,
            "SELECT
               order_timestamp as date,
-              SUM(o.quantity) as total_order
+              AVG(o.quantity) as total_order
             FROM ORDERS as o
             WHERE LOWER(order_status) IN ('shipped', 'delivered')
             GROUP BY order_timestamp
