@@ -1263,6 +1263,8 @@ ggplot(query_5, aes(x = reorder(customer_name, avg_amount), y = avg_amount, fill
         legend.position = "none")
 ```
 
+Among the top 20 customers, Gabi Boate is significantly leading, with average spending over £2000 indicating high-value transactions or frequent purchases. This suggests a potential segment of premium customers who contribute substantially to sales revenue. 
+
 6. Top 5 Categories by Most Cancellation
 
 ```{r}
@@ -1291,14 +1293,15 @@ ggplot(query_6, aes(x = reorder(cat_name, total_cancelled), y = total_cancelled,
   theme(legend.position = "none")
 ```
 
+The bar plot reveals that the toy category has the highest number of cancelled orders, followed closely by the beauty category. This underscores the importance for the business to closely monitor these categories and investigate the reasons for cancellations, whether they were initiated from the buyer’s side or seller’s side, before proceeding with any further actions. 
+
 7. Average number of orders across time
 
 ```{r}
-
 query_7 <- dbGetQuery(my_connection,
            "SELECT
               order_timestamp as date,
-              SUM(o.quantity) as total_order
+              AVG(o.quantity) as total_order
             FROM ORDERS as o
             WHERE LOWER(order_status) IN ('shipped', 'delivered')
             GROUP BY order_timestamp
@@ -1314,6 +1317,8 @@ ggplot(query_7,aes(x=date,y=total_order,group=1))+
       labs(x="Date",y="Total Number of Order")+
         theme(axis.text.x=element_text(angle=35))
 ```
+
+The average number of orders fluctuates significantly over time with no consistent overall trend. Peaks reach an average of 4 orders per day, while lows drop below 2 orders per day.
 
 8. Scatter plot for revenue across quantity; color by category
 
@@ -1341,6 +1346,7 @@ ggplot(query_8, aes(x = quantity, y = amount, color = cat_name)) +
 
 ```
 
+The scatter plot indicates varied sales across categories. High-value item likes Computers show substantial sales amounts, while Outdoors products suggest high revenue with lower quantities sold. Category like Beauty exhibits highest quantities, indicating most frequent purchases of items.
 
 ```{r}
 dbDisconnect(my_connection)
