@@ -1010,12 +1010,6 @@ dbGetQuery(my_connection,
 
 product_id check
 
-```{r,echo=FALSE,results='hide'}
-dbExecute(my_connection,"DELETE FROM ORDERS WHERE product_id IN 
-          ('1727-bev-6294', '4420-lwz-5789', 
-          '7528-dit-1763', '0986-ymb-9060', '0228-vgx-5140');")
-```
-
 ```{r}
 dbGetQuery(my_connection,
            "SELECT 
@@ -1065,12 +1059,6 @@ These code snippets validate the "PRODUCTS" table, ensuring products are correct
 These validations are essential for maintaining database integrity and supporting efficient inventory and order management.
 
 supplier_id
-
-```{r,echo=FALSE, results='hide'}
-dbExecute(my_connection,"DELETE FROM PRODUCTS
-WHERE supplier_id IN ('01HQZS3CJJMZ8VE8FSFV12394Q', '01HQZS3CJSA14X7CFXR9GN7HJJ', '01HQZS3CK7TNQY984CRWZ2YWYH', '01HQZS3CP6J1E2W3K754ED8TSV', '01HQZS3CWAANK3HMDV70KFNRTE', '01HQZS3CZ808EDV2QSZ7EC6RGQ', '01HQZS3D2JCXJ0GKKPY6JT5RMM');
-")
-```
 
 ```{r}
 dbGetQuery(my_connection,
@@ -1411,5 +1399,21 @@ The scatter plot indicates varied sales across categories. High-value item likes
 dbDisconnect(my_connection)
 ```
 
+
+**Limitation**
+
+*	Encountered challenges in creating synthetic data that reflects real-world complexity and variance without biases.
+*	Balancing realistic data representation and computational feasibility was a significant challenge.
+*	Maintaining referential integrity during synthetic data generation required rigorous validation to preserve designed relational structures.
+*	Time constraints in data processing and analysis posed challenges, necessitating optimization of SQL queries and R scripts to improve performance.
+*	The granularity of available data limited the scope of analysis, preventing insights into finer details like individual customer behaviors or precise stock levels at specific times.
+*	Implementing data pipeline automation via GitHub Actions improved workflow but introduced a learning curve.
+*	Despite obstacles, the team successfully developed a robust data management framework and derived valuable business insights, identifying areas for future improvement, such as data collection expansion and analytics pipeline optimization.
+
+**Conclusion**
+
+*	The data analysis revealed diverse consumer behavior and market trends, highlighting top-selling products and key customer segments.
+*	Identified the importance of efficient supplier performance.
+*	Insights inform future strategic decisions, aiming to enhance operations, target marketing more effectively, and drive business success.
 
 
