@@ -986,7 +986,7 @@ ggplot(query_4, aes(x = reorder(supplier_name, delivery_time), y = delivery_time
 
 ```
 
-5. Top 20 Average Spending across customers
+5. Top 20 Customers based on Average Spending 
 
 This chunks helps to find out who the biggest spenders are. It starts by gathering customer information, their order details, and the products they've purchased (focusing on shipped or delivered orders). Then, it calculates both the average amount each customer spends per order and their total spending. Finally, it ranks the customers based on their average spending and displays the top 20.
 
