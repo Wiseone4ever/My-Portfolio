@@ -1025,6 +1025,10 @@ ggplot(query_5, aes(x = reorder(customer_name, avg_amount), y = avg_amount, fill
 
 6. Top 5 categories with most cancellations
 
+This code investigates cancelled orders. It aims to figure out which product categories have the most cancellations. To do this, it pulls information about cancelled orders, the specific products in those orders, and the categories those products belong to. Then, it counts the number of cancelled orders within each product category. Finally, it sorts the categories by the number of cancellations (highest to lowest), revealing the top 5 categories where customers are most likely to change their minds.
+
+The chart rearranges the categories so those with the most cancellations are at the top. This lets you easily see which product categories are experiencing the highest levels of customer cancellations, helping to pinpoint potential problem areas.
+
 ```{r}
 
 query_6 <- dbGetQuery(my_connection,
