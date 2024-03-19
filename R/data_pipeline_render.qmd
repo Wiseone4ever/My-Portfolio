@@ -27,12 +27,68 @@ library(RSQLite)
 library(DBI)
 ```
 
-# Part 1 - Database Design and Implementation
+# Database Design and Implementation
 
-## Task 1.1: E-R Diagram Design
+##  E-R Diagram Design
+![Github Action Workflow]("../erd.png")
+
+##  Relationship Sets
+![Github Action Workflow]("../relationship_sets.png")
+
+### Cardinalities:
+
+*	A customer can have multiple orders (**1:N** relationship between **CUSTOMERS** and **ORDERS**).
+
+*	We assume that a customer can order only one type of product.
+
+*	A product belongs to only one category, but a category can have multiple products (**1:N** relationship between **PRODUCT_CATERGORY** and **PRODUCTS**).
+
+*	A supplier can supply many products (**1:N** relationship between **SUPPLIERS** and **PRODUCTS**).
+
+*	An order results in one shipment but one shipment can contain multiple orders(**1:M** relationship between **ORDERS** and **SHIPMENTS**).
+
+*	A gift card can be associated with only one order (**1:1** relationship between **GIFT_CARDS** and **ORDERS**).
+
+### Assumptions:
+
+*	Every Order must have a Customer, but a Customer does not necessarily need to have an Order.
+
+*	If a customer buys several things on the same day, and if all those things are coming from the same place, they'll be packed together and sent off with one tracking number.
+
+*	Our e-commerce business operates directly with suppliers, and we do not have any storage facilities for inventory.
+
+*	Every customer, product category, supplier, product, gift card, order, and shipment is uniquely identified by their respective ID fields (**customer_id, category_id, supplier_id, product_id, gift_card_id, order_id, shipment_id**).
+
+*	Orders reference **CUSTOMERS, PRODUCTS, SHIPMENT,** and **GIFT_CARD** through their respective ID fields, establishing a connection to existing records in those tables.
+
+*	Products reference **PRODUCT_CATEGORY** and **SUPPLIERS** through **category_id** and **supplier_id**, ensuring that each product is linked to existing categories and suppliers.
+
+* **Mandatory Information**:
+    + Customers must have a **customer_id, first_name, and date_of_birth**.
+    + Products must have a **product_id, stock_quantity, category_id, and supplier_id**.
+    + Orders must have an **order_id and order_status**.
+    + Shipments must have a **shipment_id and status**.
+        
+*	**Nullable Fields**: Some fields are optional, such as last_name for customers, which suggests that not all information is required to create a record in the database.
+
+*	**Data Type Restrictions**: Email and phone fields for customers and supplier_email for suppliers are unique, implying that no two records can have the same value for these fields.
+
+*	**premium_subscription** in **CUSTOMERS** is an integer, which is indicated using a  **boolean** value (0 or 1) 
+
+*	The price in **PRODUCTS** is of type **REAL**, allowing for decimal values.
+
+*	**Gift Cards**: Gift cards are considered an entity but might not be required for an order, as the gift_card_id in the ORDERS table can be null.
+
+*	**Shipment Process**: The **SHIPMENT** table's **dispatch_timestamp** and **delivered_timestamp** suggest tracking the timeline of a shipment but they're not set as NOT NULL, so there might be cases where a shipment is created in the system before an actual dispatch time is known.
+
+*	**Payment and Order Timing**: Orders have both an **order_timestamp** and a **payment_timestamp**, which may not always be the same—this allows tracking the time the order was made and when the payment was processed.
+
+*	**Stock Management**: stock_quantity in PRODUCTS suggests the system tracks inventory levels, but there is no direct link to orders for decrementing stock, which implies this might be managed by a separate process or system.
+
+*	**Data Consistency**: The use of foreign keys enforces data consistency, ensuring that records in linked tables must exist before they can be referenced in an association.
 
 
-## Task 1.2: SQL Database Schema Creation 
+##  SQL Database Schema Creation 
 
 ```{r, results='hide'}
 
@@ -142,9 +198,9 @@ dbGetQuery(my_connection,
 
 ```
 
-# Part 2: Data Generation and Management 
+#  Data Generation and Management 
 
-## Task 2.1: Synthetic Data Generation
+##  Synthetic Data Generation
 
 ```{r}
 ## Find all files matching the pattern
@@ -308,7 +364,7 @@ write_csv(shipment_df,"../datasets/SHIPMENTS.csv")
 
 ```
 
-## Task 2.2: Data Import and Quality Assurance
+##  Data Import and Quality Assurance
 
 1.CUSTOMERS
 
@@ -846,18 +902,22 @@ dbGetQuery(my_connection,
            ORDER BY p.category_id
            ;")
 ```
+# Data Pipeline Generation 
+##  GitHub Repository and Workflow Setup
+*	**.github/workflows**: This directory contains definitions for GitHub Actions workflows, which automate schema creation, data generation, validation, insertion and data analysis
+*	**R**: This directory is where all R scripts and code files are stored. 
+*	**database**: Contains files related to the project's database. These include database files.
+*	**database_schema**: This contains SQL scripts defining the structure of the database used in the project.
+*	**datasets**: This directory stores data files that the R scripts would process. 
 
-# Part 3: Data Pipeline Generation 
+##  GitHub Actions for Continuous Integration
+![Github Action Workflow]("../workflow.png")
 
-## Task 3.1: GitHub Repository and Workflow Setup
+#  Data Analysis and Reporting with Quarto in R 
 
-## Task 3.2: GitHub Actions for Continuous Integration
+## Advanced Data Analysis in R
 
-# Part 4: Data Analysis and Reporting with Quarto in R 
-
-## Task 4.1: Advanced Data Analysis in R
-
-## Task 4.2: Comprehensive Reporting with Quarto
+## Comprehensive Reporting with Quarto
 
 1. Top 10 Products - Overall (Quantity)
 
@@ -970,7 +1030,7 @@ query_4 <- dbGetQuery(my_connection,
            LIMIT 5;")
 
 # Plot using ggplot2
-ggplot(query_4, aes(x = reorder(supplier_name, average_delivery_time), y = average_delivery_time, fill = supplier_name)) +
+ggplot(query_4, aes(x = reorder(supplier_name, delivery_time), y = delivery_time, fill = supplier_name)) +
   geom_bar(stat = "identity") +
   coord_flip() +
   labs(title = "Average Delivery Time for Top 5 Delivery Suppliers",
@@ -1059,11 +1119,11 @@ query_7 <- dbGetQuery(my_connection,
 ```
 
 ```{r}
-ggplot(query_7,aes(x=date,y=total_order,group=1))
-      +geom_point(stat="identity")
-      +geom_line(stat="identity")
-      +labs(x="Date",y="Total Number of Order")
-        +theme(axis.text.x=element_text(angle=35))
+ggplot(query_7,aes(x=date,y=total_order,group=1))+
+      geom_point(stat="identity")+
+      geom_line(stat="identity")+
+      labs(x="Date",y="Total Number of Order")+
+        theme(axis.text.x=element_text(angle=35))
 ```
 
 8. Scatter plot for revenue across quantity; color by category

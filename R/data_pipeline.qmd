@@ -16,8 +16,10 @@ library(DBI)
 library(tidyr)
 ```
 
+## Task 1.1 - 
 
-Part 1.2 - SQL Database Schema Creation 
+
+## Task 1.2 - SQL Database Schema Creation 
 
 
 ```{r}
