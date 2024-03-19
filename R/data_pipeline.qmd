@@ -16,8 +16,10 @@ library(DBI)
 library(tidyr)
 ```
 
+## Task 1.1 - 
 
-Part 1.2 - SQL Database Schema Creation 
+
+## Task 1.2 - SQL Database Schema Creation 
 
 
 ```{r}
@@ -627,6 +629,8 @@ dbGetQuery(my_connection,"SELECT * FROM PRODUCTS;")
 
 ORDER
 
+
+
 ```{r}
 ingest_orders <- function(df) {
   
@@ -684,6 +688,8 @@ dbGetQuery(my_connection,"SELECT * FROM ORDERS;")
 
 
 SHIPMENTS
+
+
 
 ```{r}
 ingest_shipment_data <- function(df) {
