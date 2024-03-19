@@ -1230,7 +1230,7 @@ ggplot(query_4, aes(x = reorder(supplier_name, delivery_time), y = delivery_time
 
 The bar chart displays the average delivery time for the five leading suppliers. Lueilwitz Inc. and Jakubowski LLC have the longest delivery time while the other three suppliers have over 2 days for delivery, potentially suggesting an inefficiency issue.
 
-5. Top 20 Average Spending across customers
+5.  Top 20 Customers based on Average Spending 
 
 ```{r}
 
@@ -1266,7 +1266,7 @@ ggplot(query_5, aes(x = reorder(customer_name, avg_amount), y = avg_amount, fill
 
 Among the top 20 customers, Gabi Boate is significantly leading, with average spending over £2000 indicating high-value transactions or frequent purchases. This suggests a potential segment of premium customers who contribute substantially to sales revenue. 
 
-6. Top 5 Categories by Most Cancellation
+6. Top 5 Categories with the Most Cancellations
 
 ```{r}
 
