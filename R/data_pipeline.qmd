@@ -1029,6 +1029,8 @@ ggplot(query_5, aes(x = reorder(customer_name, avg_amount), y = avg_amount, fill
         legend.position = "none")
 ```
 
+Among the top 20 customers, Gabi Boate is significantly leading, with average spending over £2000 indicating high-value transactions or frequent purchases. This suggests a potential segment of premium customers who contribute substantially to sales revenue.  
+
 6. Top 5 Categories with the Most Cancellations
 
 This code investigates cancelled orders. It aims to figure out which product categories have the most cancellations. To do this, it pulls information about cancelled orders, the specific products in those orders, and the categories those products belong to. Then, it counts the number of cancelled orders within each product category. Finally, it sorts the categories by the number of cancellations (highest to lowest), revealing the top 5 categories where customers are most likely to change their minds.
@@ -1059,6 +1061,8 @@ ggplot(query_6, aes(x = reorder(cat_name, total_cancelled), y = total_cancelled,
   theme(legend.position = "none")
 ```
 
+The bar plot reveals that the toy category has the highest number of cancelled orders, followed closely by the beauty category. This underscores the importance for the business to closely monitor these categories and investigate the reasons for cancellations, whether they were initiated from the buyer’s side or seller’s side, before proceeding with any further actions. 
+ 
 7. Average number of orders across time
 
 ```{r}
@@ -1076,6 +1080,8 @@ query_7 <- dbGetQuery(my_connection,
 ggplot(query_7,aes(x=date,y=total_order,group=1))+geom_point(stat="identity")+geom_line(stat="identity")+labs(x="Date",y="Total Number of Order")+theme(axis.text.x=element_text(angle=35))
 
 ```
+
+The average number of orders fluctuates significantly over time with no consistent overall trend. Peaks reach an average of 4 orders per day, while lows drop below 2 orders per day. 
 
 8. Scatter plot for revenue across quantity; color by category
 
@@ -1102,3 +1108,5 @@ ggplot(revenue_quantity, aes(x = quantity, y = amount, color = cat_name)) +
   theme(legend.position = "right")
 
 ```
+
+The scatter plot indicates varied sales across categories. High-value item likes Computers show substantial sales amounts, while Outdoors products suggest high revenue with lower quantities sold. Category like Beauty exhibits highest quantities, indicating most frequent purchases of items.
