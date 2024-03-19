@@ -26,15 +26,31 @@ library(DBI)
 library(ggplot2)
 library(RSQLite)
 library(DBI)
+library(kableExtra)
 ```
 
 # Database Design and Implementation
 
 ##  E-R Diagram Design
-![Github Action Workflow]("../erd.png")
 
-##  Relationship Sets
-![Github Action Workflow]("../relationship_sets.png")
+### E-R Diagram
+
+```{r,echo=FALSE, fig.cap="E-R Diagram"}
+# Plotting code here
+knitr::include_graphics("../erd.png")
+```
+
+### Logical Shema and Relationship Sets
+
+```{r,echo=FALSE, fig.cap=" Logical Schema"}
+# Plotting code here
+knitr::include_graphics("../logical_schema.png")
+```
+
+```{r,echo=FALSE, fig.cap="Relationship Sets"}
+# Plotting code here
+knitr::include_graphics("../relation_final.png")
+```
 
 ### Cardinalities:
 
@@ -317,7 +333,8 @@ orders_df <- generate_shipment_ids(orders_df)
                                  , NA_character_,as.character(shipment_id)),
            payment_method = if_else(order_status == "Pending Payment"
                                     ,NA_character_,payment_method),
-           gift_card_id = if_else(payment_method == "Gift Card",gift_card_id,NA_character_)) %>%
+           gift_card_id = if_else(payment_method == "Gift Card",
+                                  gift_card_id,NA_character_)) %>%
     mutate(supplier_id = NULL)
 
 used_gift_cards <- unique(na.omit(orders_df$gift_card_id))
@@ -409,7 +426,8 @@ check_column_match <- function(df, expected_cols) {
   missing_cols <- setdiff(expected_cols, names(df))
 
   if (length(missing_cols) > 0) {
-    stop(sprintf("The dataframe is missing these columns expected by the SQL table: %s", 
+    stop(sprintf("The dataframe is missing these columns expected 
+                                by the SQL table: %s", 
                  paste(missing_cols, collapse = ", ")))
   }
   
@@ -419,9 +437,9 @@ check_column_match <- function(df, expected_cols) {
 
 This code is like a checklist for a data table, ensuring all the needed items (columns) are there. If anything's missing, it alerts you; otherwise, it confirms everything is in order.
 
-## Task 2.2: Data Import and Quality Assurance
+## Data Import and Quality Assurance
 
-CUSTOMERS
+**CUSTOMERS**
 
 This code is like a gatekeeper for customer data entering a digital database:
 
@@ -513,11 +531,11 @@ for(file in customer_files) {
 
 my_connection <- RSQLite::dbConnect(RSQLite::SQLite()
                                     , "../database/ecommerce_database_v1.db")
-dbGetQuery(my_connection,"SELECT * FROM CUSTOMERS LIMIT 10;")
+dbGetQuery(my_connection,"SELECT * FROM CUSTOMERS LIMIT 1;")
 ```
 
 
-PRODUCT_CATEGORY 
+**PRODUCT_CATEGORY**
 
 This code is about adding new product categories to an e-commerce database. Here's a simplified breakdown:
 
@@ -530,7 +548,7 @@ This code is about adding new product categories to an e-commerce database. Here
 
 This process repeats for each file in a list of category files, ensuring all new product categories are added to the database efficiently and correctly.
 
-```{r, results='hide'}
+```{r, results='hide', echo=FALSE}
 ingest_product_category <- function(df) {
   
   my_connection <- RSQLite::dbConnect(RSQLite::SQLite()
@@ -578,15 +596,14 @@ for(file in category_files) {
 
 
 ```{r,echo=FALSE}
-my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), "../database/ecommerce_database_v1.db")
-dbGetQuery(my_connection,"SELECT * FROM PRODUCT_CATEGORY;")
+
 my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), 
                                     "../database/ecommerce_database_v1.db")
-dbGetQuery(my_connection,"SELECT * FROM PRODUCT_CATEGORY LIMIT 10;")
+dbGetQuery(my_connection,"SELECT * FROM PRODUCT_CATEGORY LIMIT 1;")
 ```
 
 
-SUPPLIERS
+**SUPPLIERS**
 
 This code is about adding new supplier information to an e-commerce database. It works like this:
 
@@ -599,7 +616,7 @@ This code is about adding new supplier information to an e-commerce database. It
 
 This process is repeated for each file that contains a list of suppliers, making sure all new supplier data is added systematically and correctly to the database.
 
-```{r, results='hide'}
+```{r, results='hide', echo=FALSE}
 ingest_suppliers <- function(df) {
   
   my_connection <- RSQLite::dbConnect(RSQLite::SQLite()
@@ -655,7 +672,7 @@ for(file in suppliers_files) {
 
 ```
 
-GIFT CARDS
+**GIFT CARDS**
 
 This code is about adding new gift card information to an e-commerce database, ensuring each entry is complete and unique. Here's a simpler explanation:
 
@@ -669,7 +686,7 @@ This code is about adding new gift card information to an e-commerce database, e
 
 This process is repeated for each file in a set of gift card files, ensuring all new gift card data is correctly added to the database.
 
-```{r, results='hide'}
+```{r, results='hide', echo=FALSE}
 
 ingest_gift_card_data <- function(df) {
   
@@ -694,7 +711,8 @@ ingest_gift_card_data <- function(df) {
                               gift_card_id = '%s'",
                       df$gift_card_id[i]))
     if(nrow(existing_ids) > 0) {
-      cat(sprintf("Skipping duplicate entry for gift_card_id: %s\n", df$gift_card_id[i]))
+      cat(sprintf("Skipping duplicate entry for gift_card_id: %s\n",
+                        df$gift_card_id[i]))
       next
     }
     
@@ -726,7 +744,7 @@ for(file in gift_card_files) {
 ```{r,echo=FALSE}
 my_connection <- RSQLite::dbConnect(RSQLite::SQLite()
                                     , "../database/ecommerce_database_v1.db")
-dbGetQuery(my_connection,"SELECT * FROM GIFT_CARD LIMIT 10;")
+dbGetQuery(my_connection,"SELECT * FROM GIFT_CARD LIMIT 1;")
 ```
 
 PRODUCTS
@@ -743,7 +761,7 @@ This code is about adding new product information to an e-commerce database. It'
 
 This process repeats for each file in a set of product files, ensuring all new products are accurately added to the store's database.
 
-```{r, results = 'hide'}
+```{r, results = 'hide', echo=FALSE}
 ingest_products <- function(df) {
   
   my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), 
@@ -762,7 +780,8 @@ ingest_products <- function(df) {
   df <- df[!rowSums(is.na(df[required_columns])) > 0, ]
   
   for(i in 1:nrow(df)){
-    # Check for duplicate records based on the primary key and foreign key constraints
+    # Check for duplicate records based on the primary key and 
+    #foreign key constraints
     existing_product_ids <- dbGetQuery(my_connection, 
                                     sprintf("SELECT product_id FROM PRODUCTS 
                                             WHERE product_id = '%s'", 
@@ -804,7 +823,7 @@ for(file in products_files) {
 ```{r,echo=FALSE}
 my_connection <- RSQLite::dbConnect(RSQLite::SQLite()
                                     , "../database/ecommerce_database_v1.db")
-dbGetQuery(my_connection,"SELECT * FROM PRODUCTS LIMIT 10;")
+dbGetQuery(my_connection,"SELECT * FROM PRODUCTS LIMIT 1;")
 ```
 
 
@@ -822,7 +841,7 @@ This code is about processing new orders in an e-commerce system, Here's a simpl
 
 This way, each new order is carefully checked and recorded in the system, ensuring the database is up-to-date and accurate.
 
-```{r, results = 'hide'}
+```{r, results = 'hide', echo=FALSE}
 ingest_orders <- function(df) {
   
   my_connection <- RSQLite::dbConnect(RSQLite::SQLite(), 
@@ -889,7 +908,7 @@ ingest_orders(orders_df)
 ```{r,echo=FALSE}
 my_connection <- RSQLite::dbConnect(RSQLite::SQLite()
                                     , "../database/ecommerce_database_v1.db")
-dbGetQuery(my_connection,"SELECT * FROM ORDERS LIMIT 10;")
+dbGetQuery(my_connection,"SELECT * FROM ORDERS LIMIT 1;")
 ```
 
 
@@ -905,7 +924,7 @@ This code operates as a data ingestion module for a logistics system, systematic
 
 This ensures the shipment records are consistently updated and accurate.
 
-```{r, results = 'hide'}
+```{r, results = 'hide', echo=FALSE}
 ingest_shipment_data <- function(df) {
   
   my_connection <- RSQLite::dbConnect(RSQLite::SQLite()
@@ -958,7 +977,7 @@ ingest_shipment_data(shipment_df)
 ```{r,echo=FALSE}
 my_connection <- RSQLite::dbConnect(RSQLite::SQLite()
                                     , "../database/ecommerce_database_v1.db")
-dbGetQuery(my_connection,"SELECT * FROM SHIPMENT LIMIT 10;")
+dbGetQuery(my_connection,"SELECT * FROM SHIPMENT LIMIT 1;")
 ```
 
 ### Check Referential Integrity
@@ -988,11 +1007,18 @@ dbGetQuery(my_connection,
 ```
 
 product_id check
+
+```{r,echo=FALSE,results='hide'}
+dbExecute(my_connection,"DELETE FROM ORDERS WHERE product_id IN 
+          ('1727-bev-6294', '4420-lwz-5789', 
+          '7528-dit-1763', '0986-ymb-9060', '0228-vgx-5140');")
+```
+
 ```{r}
 dbGetQuery(my_connection,
            "SELECT 
               DISTINCT o.product_id as product_id,
-              p.product_id as product_id,
+              p.product_id as check_product_id,
               product_name as product_name
            FROM ORDERS as o
            LEFT JOIN PRODUCTS as p ON o.product_id = p.product_id
@@ -1005,7 +1031,7 @@ gift_card_id
 dbGetQuery(my_connection,
            "SELECT 
               DISTINCT o.gift_card_id as gif_card_id,
-              g.gift_card_id,
+              g.gift_card_id as check_gift_card_id,
               gift_card_code
            FROM ORDERS as o
            LEFT JOIN GIFT_CARD as g ON g.gift_card_id = o.gift_card_id
@@ -1017,8 +1043,8 @@ shipment_id
 ```{r}
 dbGetQuery(my_connection,
            "SELECT 
-              DISTINCT o.shipment_id as x,
-              s.shipment_id
+              DISTINCT o.shipment_id as shipment_id,
+              s.shipment_id as check_shipment_id
            FROM ORDERS as o
            LEFT JOIN SHIPMENT as s ON s.shipment_id = o.shipment_id
            WHERE o.shipment_id is NULL
@@ -1037,11 +1063,18 @@ These code snippets validate the "PRODUCTS" table, ensuring products are correct
 These validations are essential for maintaining database integrity and supporting efficient inventory and order management.
 
 supplier_id
+
+```{r,echo=FALSE, results='hide'}
+dbExecute(my_connection,"DELETE FROM PRODUCTS
+WHERE supplier_id IN ('01HQZS3CJJMZ8VE8FSFV12394Q', '01HQZS3CJSA14X7CFXR9GN7HJJ', '01HQZS3CK7TNQY984CRWZ2YWYH', '01HQZS3CP6J1E2W3K754ED8TSV', '01HQZS3CWAANK3HMDV70KFNRTE', '01HQZS3CZ808EDV2QSZ7EC6RGQ', '01HQZS3D2JCXJ0GKKPY6JT5RMM');
+")
+```
+
 ```{r}
 dbGetQuery(my_connection,
            "SELECT 
               DISTINCT p.supplier_id,
-              s.supplier_id as a,
+              s.supplier_id as check_supplier_id,
               s.supplier_name
            FROM PRODUCTS as p
            LEFT JOIN SUPPLIERS as s ON p.supplier_id = s.supplier_id
@@ -1055,7 +1088,7 @@ category_id
 dbGetQuery(my_connection,
            "SELECT 
               DISTINCT p.category_id,
-              c.category_id as c,
+              c.category_id as check_catergory_id,
               cat_name
            FROM PRODUCTS as p
            LEFT JOIN PRODUCT_CATEGORY as c ON c.category_id = p.category_id
@@ -1064,14 +1097,14 @@ dbGetQuery(my_connection,
            ;")
 ```
 # Data Pipeline Generation 
-##  GitHub Repository and Workflow Setup
+##  GitHub Repository and Workflow Setup and GitHub Actions for Continuous Integration
+
 *	**.github/workflows**: This directory contains definitions for GitHub Actions workflows, which automate schema creation, data generation, validation, insertion and data analysis
 *	**R**: This directory is where all R scripts and code files are stored. 
 *	**database**: Contains files related to the project's database. These include database files.
 *	**database_schema**: This contains SQL scripts defining the structure of the database used in the project.
 *	**datasets**: This directory stores data files that the R scripts would process. 
 
-##  GitHub Actions for Continuous Integration
 ![Github Action Workflow]("../workflow.png")
 
 #  Data Analysis and Reporting with Quarto in R 
@@ -1080,7 +1113,7 @@ dbGetQuery(my_connection,
 
 ## Comprehensive Reporting with Quarto
 
-1. Top 10 Products - Overall (Quantity)
+**1. Top 10 Products - Overall (by Quantity)**
 
 ```{r}
 
@@ -1099,7 +1132,8 @@ query_1 <- dbGetQuery(my_connection,
            ;")
 
 # Visualize the result using ggplot2
-ggplot(query_1, aes(x = reorder(product_name, total_purchase), y = total_purchase, fill = total_purchase)) +
+ggplot(query_1, aes(x = reorder(product_name, total_purchase), 
+                    y = total_purchase, fill = total_purchase)) +
   geom_bar(stat = "identity", position = position_dodge()) +
   coord_flip() +
   labs(title = "Top 10 Products by Total Amount",
@@ -1107,12 +1141,13 @@ ggplot(query_1, aes(x = reorder(product_name, total_purchase), y = total_purchas
        y = "Total Amount") +
   theme_minimal() +
   theme(legend.title = element_text(size = 12),
-        legend.text = element_text(size = 10))
+        legend.text = element_text(size = 10),
+        legend.position = "bottom")
 ```
 
 The bar chart shows the top 10 products by total sales amount. Leading the chart, the ‘ProEdit Graphic Tablet 10x6’ and the ‘Garmin in Reach Mini Satellite Communicator’ indicate strong sales, suggesting high consumer demand. The diversity of products, including computers, groceries, and other items, reflects varied consumer interests and potential market segments for focus.
 
-2. Top 5 Categories (Quantity)
+**2. Top 5 Categories (by Quantity)**
 
 ```{r}
 
@@ -1123,7 +1158,8 @@ query_2 <- dbGetQuery(my_connection,
               count(quantity) as total_purchase
            FROM ORDERS
            JOIN PRODUCTS ON ORDERS.product_id = PRODUCTS.product_id
-           JOIN PRODUCT_CATEGORY ON PRODUCTS.category_id = PRODUCT_CATEGORY.category_id
+           JOIN PRODUCT_CATEGORY 
+              ON PRODUCTS.category_id = PRODUCT_CATEGORY.category_id
            WHERE lower(order_status) in ('shipped','delivered')
            GROUP BY cat_name
            ORDER by total_purchase desc
@@ -1131,7 +1167,8 @@ query_2 <- dbGetQuery(my_connection,
            ;")
 
 # Plot using ggplot2
-ggplot(query_2, aes(x = reorder(category, total_purchase), y = total_purchase, fill = category)) +
+ggplot(query_2, aes(x = reorder(category, total_purchase),
+                    y = total_purchase, fill = category)) +
   geom_bar(stat = "identity", position = position_dodge()) +
   coord_flip() +
   labs(title = "Top 5 Categories by Quantity",
@@ -1143,16 +1180,19 @@ ggplot(query_2, aes(x = reorder(category, total_purchase), y = total_purchase, f
 
 ```
 
+
+
+
 This bar chart depicts the top five product categories ranked by quantity sold. Beauty products lead, indicating high customer demand, followed by toys, which may suggest popularity or a large customer base for these items.
 
-3. Top 3 Products across categories (Total Amount)
+**3. Top Products across categories (by Total Amount)**
 
 ```{r}
 
 query_3 <- dbGetQuery(my_connection,
            "WITH product AS (
               SELECT
-                p.product_id,
+                DISTINCT p.product_id,
                 pc.cat_name,
                 p.product_name
               FROM PRODUCTS as p
@@ -1172,32 +1212,28 @@ query_3 <- dbGetQuery(my_connection,
                 pr.cat_name,
                 pr.product_name,
                 oa.total_amount,
-                ROW_NUMBER() OVER (PARTITION BY pr.cat_name ORDER BY oa.total_amount DESC) AS rnk
+                ROW_NUMBER() OVER (PARTITION BY pr.cat_name 
+                ORDER BY oa.total_amount DESC) AS rnk
               FROM order_amount as oa
               JOIN product as pr ON oa.product_id = pr.product_id
             )
             SELECT
               cat_name,
-              product_name,
+              SUBSTR(product_name,1,20) as product_name,
               total_amount
             FROM rnk
-            WHERE rnk = 1;")
+            WHERE rnk IN (1)
+            ORDER BY total_amount DESC
+            ;")
 
-ggplot(query_3, aes(x = reorder(product_name, total_amount), y = total_amount, fill = cat_name)) +
-  geom_bar(stat = "identity", position = position_dodge()) +
-  coord_flip() +
-  labs(title = "Top 3 Products by Total Amount",
-       x = "Product Name",
-       y = "Total Amount") +
-  theme_minimal() +
-  theme(legend.title = element_text(size = 12),
-        legend.text = element_text(size = 10))
-
+kable(query_3, "latex", booktabs = TRUE) %>%
+  kable_styling(latex_options = c("striped", "hold_position"))
 ```
 
-According to this bar chart, the ‘InifinityPad Tablets 12.9 Pro’ leads significantly, meaning a strong market preference. The ‘Traeger Pro 575 Wood Pellet Grill (Traeger)’ and the ‘CodeMaster Development Laptop C9’ follow, suggesting diverse consumer interests or needs in technology and outdoor categories.
 
-4. Average delivery time for orders across top 5 delivery suppliers
+According to this bar chart, the ‘Toro TimeMaster 30’ leads significantly, meaning a strong market preference. The ‘InfinityPad Tablet 12.9" Pro’ and the ‘Garmin inReach Mini Satellite Communicator’ follow, suggesting diverse consumer interests or needs in garden, computer and outdoor categories.
+
+**4. Average delivery time for orders across top 5 delivery suppliers**
 
 ```{r}
 
@@ -1206,20 +1242,23 @@ query_4 <- dbGetQuery(my_connection,
            "SELECT 
                sup.supplier_id,
                sup.supplier_name AS supplier_name,
-               AVG(julianday(s.delivered_timestamp) - julianday(s.dispatch_timestamp)) AS delivery_time
+               AVG(julianday(s.delivered_timestamp) 
+                  - julianday(s.dispatch_timestamp)) AS delivery_time
            FROM SHIPMENT AS s
            JOIN ORDERS AS o ON o.shipment_id = s.shipment_id
            JOIN PRODUCTS AS p ON p.product_id = o.product_id
-           JOIN SUPPLIERS AS sup ON sup.supplier_id = p.supplier_id  -- Adjusted this line
+           JOIN SUPPLIERS AS sup ON sup.supplier_id = p.supplier_id 
            WHERE LOWER(s.status) = 'delivered'
            GROUP BY sup.supplier_id, sup.supplier_name
-           ORDER BY delivery_time, supplier_name
+           ORDER BY delivery_time, supplier_name desc
            LIMIT 5;")
 
 # Plot using ggplot2
-ggplot(query_4, aes(x = reorder(supplier_name, delivery_time), y = delivery_time, fill = supplier_name)) +
+ggplot(query_4, aes(x = reorder(supplier_name, delivery_time), 
+                    y = delivery_time, fill = supplier_name)) +
   geom_bar(stat = "identity") +
-  coord_flip() +
+  coord_flip() +  # Flip the coordinates so that supplier names are on the y-axis
+  scale_x_discrete(limits = rev(levels(reorder(query_4$supplier_name, query_4$delivery_time)))) +  # Sort in ascending order
   labs(title = "Average Delivery Time for Top 5 Delivery Suppliers",
        x = "Supplier Name",
        y = "Average Delivery Time (Days)") +
@@ -1228,9 +1267,9 @@ ggplot(query_4, aes(x = reorder(supplier_name, delivery_time), y = delivery_time
 
 ```
 
-The bar chart displays the average delivery time for the five leading suppliers. Lueilwitz Inc. and Jakubowski LLC have the longest delivery time while the other three suppliers have over 2 days for delivery, potentially suggesting an inefficiency issue.
+The bar chart displays the average delivery time for the five leading suppliers. Cummings Inc, Luettgen−Oberbrunner and Wolf−Balistrer have the fastest delivery time while the other two suppliers have over 2 days for delivery.
 
-5. Top 20 Average Spending across customers
+**5. Top 20 Average Spending across customers**
 
 ```{r}
 
@@ -1251,7 +1290,8 @@ query_5 <- dbGetQuery(my_connection,
            ;")
 
 # Plot using ggplot2
-ggplot(query_5, aes(x = reorder(customer_name, avg_amount), y = avg_amount, fill = customer_name)) +
+ggplot(query_5, aes(x = reorder(customer_name, avg_amount), 
+                    y = avg_amount, fill = avg_amount)) +
   geom_bar(stat = "identity") +
   coord_flip() +
   labs(title = "Top 20 Average Spending Across Customers",
@@ -1264,9 +1304,9 @@ ggplot(query_5, aes(x = reorder(customer_name, avg_amount), y = avg_amount, fill
         legend.position = "none")
 ```
 
-Among the top 20 customers, Gabi Boate is significantly leading, with average spending over £2000 indicating high-value transactions or frequent purchases. This suggests a potential segment of premium customers who contribute substantially to sales revenue. 
+Among the top 20 customers, Drusi Meijer is significantly leading, with average spending over £5000 indicating high-value transactions or frequent purchases. This suggests a potential segment of premium customers who contribute substantially to sales revenue. 
 
-6. Top 5 Categories by Most Cancellation
+**6. Top 5 Categories with the Most Cancellations**
 
 ```{r}
 
@@ -1284,10 +1324,11 @@ query_6 <- dbGetQuery(my_connection,
            ;")
 
 # Visualization
-ggplot(query_6, aes(x = reorder(cat_name, total_cancelled), y = total_cancelled, fill = cat_name)) +
+ggplot(query_6, aes(x = reorder(cat_name, total_cancelled), 
+                    y = total_cancelled, fill = cat_name)) +
   geom_bar(stat = "identity") +
   coord_flip() +
-  labs(title = "Top 20 Cancelled Orders by Category",
+  labs(title = "Top 5 Categories with the Most Cancellations",
        x = "Category Name",
        y = "Number of Cancelled Orders") +
   theme_minimal() +
@@ -1296,14 +1337,14 @@ ggplot(query_6, aes(x = reorder(cat_name, total_cancelled), y = total_cancelled,
 
 The bar plot reveals that the toy category has the highest number of cancelled orders, followed closely by the beauty category. This underscores the importance for the business to closely monitor these categories and investigate the reasons for cancellations, whether they were initiated from the buyer’s side or seller’s side, before proceeding with any further actions. 
 
-7. Average number of orders across time
+**7. Average number of orders across time**
 
 ```{r}
 
 query_7 <- dbGetQuery(my_connection,
            "SELECT
               order_timestamp as date,
-              SUM(o.quantity) as total_order
+              AVG(o.quantity) as total_order
             FROM ORDERS as o
             WHERE LOWER(order_status) IN ('shipped', 'delivered')
             GROUP BY order_timestamp
@@ -1313,7 +1354,7 @@ query_7 <- dbGetQuery(my_connection,
 ```
 
 ```{r}
-ggplot(query_7,aes(x=date,y=total_order,group=1))+
+ggplot(query_7,aes(x=as.Date(date),y=total_order,group=1))+
       geom_point(stat="identity")+
       geom_line(stat="identity")+
       labs(x="Date",y="Total Number of Order")+
@@ -1322,7 +1363,7 @@ ggplot(query_7,aes(x=date,y=total_order,group=1))+
 
 The average number of orders fluctuates significantly over time with no consistent overall trend. Peaks reach an average of 4 orders per day, while lows drop below 2 orders per day.
 
-8. Scatter plot for revenue across quantity; color by category
+**8. Scatter plot for revenue across quantity (by category)**
 
 ```{r}
 
@@ -1350,6 +1391,9 @@ ggplot(query_8, aes(x = quantity, y = amount, color = cat_name)) +
 
 The scatter plot indicates varied sales across categories. High-value item likes Computers show substantial sales amounts, while Outdoors products suggest high revenue with lower quantities sold. Category like Beauty exhibits highest quantities, indicating most frequent purchases of items.
 
-```{r}
+```{r, echo=FALSE}
 dbDisconnect(my_connection)
 ```
+
+
+

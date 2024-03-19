@@ -755,6 +755,7 @@ dbGetQuery(my_connection,
 ```
 
 product_id check
+
 ```{r}
 dbGetQuery(my_connection,
            "SELECT 
@@ -763,6 +764,7 @@ dbGetQuery(my_connection,
               product_name as product_name
            FROM ORDERS as o
            LEFT JOIN PRODUCTS as p ON o.product_id = p.product_id
+           WHERE p.product_id is NULL
            ;")
 ```
 
@@ -791,6 +793,14 @@ dbGetQuery(my_connection,
 ```
 
 PRODUCTS
+
+```{r}
+dbExecute(my_connection,"DELETE FROM PRODUCTS
+WHERE supplier_id IN ('01HQZS3CJJMZ8VE8FSFV12394Q', '01HQZS3CJSA14X7CFXR9GN7HJJ', '01HQZS3CK7TNQY984CRWZ2YWYH', '01HQZS3CP6J1E2W3K754ED8TSV', '01HQZS3CWAANK3HMDV70KFNRTE', '01HQZS3CZ808EDV2QSZ7EC6RGQ', '01HQZS3D2JCXJ0GKKPY6JT5RMM');
+")
+```
+
+
 supplier_id
 ```{r}
 dbGetQuery(my_connection,
@@ -800,6 +810,7 @@ dbGetQuery(my_connection,
               s.supplier_name
            FROM PRODUCTS as p
            LEFT JOIN SUPPLIERS as s ON p.supplier_id = s.supplier_id
+           where s.supplier_id is NULL
            ORDER BY p.supplier_id
            ;")
 ```
@@ -1110,3 +1121,4 @@ ggplot(revenue_quantity, aes(x = quantity, y = amount, color = cat_name)) +
 ```
 
 The scatter plot indicates varied sales across categories. High-value item likes Computers show substantial sales amounts, while Outdoors products suggest high revenue with lower quantities sold. Category like Beauty exhibits highest quantities, indicating most frequent purchases of items.
+
