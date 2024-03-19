@@ -816,6 +816,10 @@ SQL version
 
 1. Top 10 Products - Overall (Quantity)
 
+This code functions as an insightful sales analyst allowing to identify the top-performing products. It begins by compiling data about the products, their respective categories, and details of  fulfilled orders. Subsequently, it calculates the total revenue generated for each product. The code then systematically groups products by category and ranks them according to their sales performance. Lastly, it presents the top three best-selling products within each category, providing valuable insights into customer preferences.
+
+In the bar chart, products are ranked by total sales (highest to lowest), presenting the top 10.Each bar visually represents a product, and the length of the bar indicates how much revenue that product has brought in. 
+
 ```{r}
 
 # Define the SQL query
