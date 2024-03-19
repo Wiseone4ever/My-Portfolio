@@ -868,7 +868,7 @@ were purchased from that category.
 
 ```{r}
 
-# SQL query to fetch top 5 categories by quantity
+# SQL query to fetch top 5 categories by quantity.
 query_2 <- dbGetQuery(my_connection,
            "SELECT 
               cat_name as category,
