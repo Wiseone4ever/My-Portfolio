@@ -952,7 +952,7 @@ ggplot(query_3, aes(x = reorder(product_name, total_amount), y = total_amount, f
 
 ```
 
-4. Average delivery time for orders across top 5 delivery suppliers
+4. Average delivery time for orders across the 5 slowest delivery suppliers
 
 This code acts as a tool to analyse the efficiency of the shipping process. It focuses specifically on shipments marked as "delivered", linking them back to the suppliers who provided the products, relevant order details, and the shipment information itself. The code then calculates the average time it takes each supplier's products to be delivered from the moment they're dispatched to when they reach the customer. Finally, it ranks the suppliers based on their average delivery times, highlighting the top 5 suppliers with the slowest deliveries. This helps to identify potential areas for improvement within your supply chain.
 
@@ -960,7 +960,7 @@ The chart arranges the suppliers so the one with the longest average delivery ti
 
 ```{r}
 
-# Define the SQL query for average delivery time for orders across top 5 delivery suppliers.
+# Define the SQL query for average delivery time for orders across top 5 delivery suppliers
 query_4 <- dbGetQuery(my_connection,
            "SELECT 
                sup.supplier_id,
@@ -986,7 +986,7 @@ ggplot(query_4, aes(x = reorder(supplier_name, delivery_time), y = delivery_time
 
 ```
 
-5. Top 20 Average Spending across customers
+5. Top 20 Customers based on Average Spending 
 
 This chunks helps to find out who the biggest spenders are. It starts by gathering customer information, their order details, and the products they've purchased (focusing on shipped or delivered orders). Then, it calculates both the average amount each customer spends per order and their total spending. Finally, it ranks the customers based on their average spending and displays the top 20.
 
