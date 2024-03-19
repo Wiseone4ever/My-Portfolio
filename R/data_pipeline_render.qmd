@@ -435,9 +435,6 @@ check_column_match <- function(df, expected_cols) {
 }
 ```
 
-This code is like a checklist for a data table, ensuring all the needed items (columns) are there. If anything's missing, it alerts you; otherwise, it confirms everything is in order.
-
-## Data Import and Quality Assurance
 
 **CUSTOMERS**
 
@@ -747,7 +744,7 @@ my_connection <- RSQLite::dbConnect(RSQLite::SQLite()
 dbGetQuery(my_connection,"SELECT * FROM GIFT_CARD LIMIT 1;")
 ```
 
-PRODUCTS
+**PRODUCTS**
 
 This code is about adding new product information to an e-commerce database. It's like checking and organizing new stock in a store. Here's a simpler breakdown:
 
@@ -827,7 +824,7 @@ dbGetQuery(my_connection,"SELECT * FROM PRODUCTS LIMIT 1;")
 ```
 
 
-ORDER
+**ORDER**
 
 This code is about processing new orders in an e-commerce system, Here's a simple explanation:
 
@@ -912,7 +909,7 @@ dbGetQuery(my_connection,"SELECT * FROM ORDERS LIMIT 1;")
 ```
 
 
-SHIPMENTS
+**SHIPMENTS**
 
 This code operates as a data ingestion module for a logistics system, systematically validating and storing each shipment's metadata within the organization's database:
 
@@ -937,14 +934,19 @@ ingest_shipment_data <- function(df) {
   # Insert validated data into the database
   for(i in 1:nrow(df)){
     # Check for duplicate records based on the primary key
-    existing_ids <- dbGetQuery(my_connection, sprintf("SELECT shipment_id FROM SHIPMENT WHERE shipment_id = '%s'", df$shipment_id[i]))
+    existing_ids <- dbGetQuery(my_connection, 
+    sprintf("SELECT shipment_id FROM SHIPMENT WHERE shipment_id = '%s'",
+            df$shipment_id[i]))
     if(nrow(existing_ids) > 0) {
-      cat(sprintf("Skipping duplicate entry for shipment_id: %s\n", df$shipment_id[i]))
+      cat(sprintf("Skipping duplicate entry for shipment_id: %s\n", 
+                  df$shipment_id[i]))
       next
     }
     
-    insert_query <- sprintf("INSERT INTO SHIPMENT (shipment_id, dispatch_timestamp, delivered_timestamp, status) VALUES ('%s', '%s', '%s', '%s')",
-                            df$shipment_id[i], df$dispatch_timestamp[i], df$delivered_timestamp[i], df$status[i])
+    insert_query <- sprintf("INSERT INTO SHIPMENT (shipment_id, dispatch_timestamp, 
+                delivered_timestamp, status) VALUES ('%s', '%s', '%s', '%s')",
+              df$shipment_id[i], df$dispatch_timestamp[i], 
+              df$delivered_timestamp[i], df$status[i])
 
     existing_ids <- dbGetQuery(my_connection
         , sprintf("SELECT shipment_id FROM SHIPMENT WHERE shipment_id = '%s'", 
@@ -982,7 +984,7 @@ dbGetQuery(my_connection,"SELECT * FROM SHIPMENT LIMIT 1;")
 
 ### Check Referential Integrity
 
-ORDERS Table
+**ORDERS Table**
 
 These code snippets act as integrity checks for the "ORDERS" table, verifying links to "CUSTOMERS," "PRODUCTS," "GIFT_CARD," and "SHIPMENT" tables:
 
@@ -1052,7 +1054,7 @@ dbGetQuery(my_connection,
            ;")
 ```
 
-PRODUCTS
+**PRODUCTS Table**
 
 
 These code snippets validate the "PRODUCTS" table, ensuring products are correctly linked to existing suppliers and categories:
@@ -1109,9 +1111,7 @@ dbGetQuery(my_connection,
 
 #  Data Analysis and Reporting with Quarto in R 
 
-## Advanced Data Analysis in R
-
-## Comprehensive Reporting with Quarto
+## Advanced Data Analysis and Reporting 
 
 **1. Top 10 Products - Overall (by Quantity)**
 
@@ -1121,7 +1121,7 @@ dbGetQuery(my_connection,
 query_1 <- dbGetQuery(my_connection,
            "SELECT 
               ORDERS.product_id,
-              product_name,
+              SUBSTR(product_name,1,20) as product_name,
               count(quantity) as total_purchase
            FROM ORDERS
            JOIN PRODUCTS ON ORDERS.product_id = PRODUCTS.product_id
@@ -1198,6 +1198,7 @@ query_3 <- dbGetQuery(my_connection,
               FROM PRODUCTS as p
               JOIN PRODUCT_CATEGORY as pc ON pc.category_id = p.category_id
             ),
+            
             order_amount AS (
               SELECT
                 o.product_id AS product_id,
@@ -1207,6 +1208,7 @@ query_3 <- dbGetQuery(my_connection,
               WHERE LOWER(o.order_status) IN ('shipped', 'delivered')
               GROUP BY o.product_id
             ),
+            
             rnk AS (
               SELECT
                 pr.cat_name,
@@ -1226,6 +1228,14 @@ query_3 <- dbGetQuery(my_connection,
             ORDER BY total_amount DESC
             ;")
 
+
+
+
+
+
+
+
+
 kable(query_3, "latex", booktabs = TRUE) %>%
   kable_styling(latex_options = c("striped", "hold_position"))
 ```
@@ -1233,11 +1243,17 @@ kable(query_3, "latex", booktabs = TRUE) %>%
 
 According to this bar chart, the ‘Toro TimeMaster 30’ leads significantly, meaning a strong market preference. The ‘InfinityPad Tablet 12.9" Pro’ and the ‘Garmin inReach Mini Satellite Communicator’ follow, suggesting diverse consumer interests or needs in garden, computer and outdoor categories.
 
+
+
+
+
+
 **4. Average delivery time for orders across top 5 delivery suppliers**
 
 ```{r}
 
-# Define the SQL query for average delivery time for orders across top 5 delivery suppliers
+# Define the SQL query for average delivery time for orders across 
+#top 5 delivery suppliers
 query_4 <- dbGetQuery(my_connection,
            "SELECT 
                sup.supplier_id,
@@ -1259,7 +1275,7 @@ ggplot(query_4, aes(x = reorder(supplier_name, delivery_time),
   geom_bar(stat = "identity") +
   coord_flip() +  # Flip the coordinates so that supplier names are on the y-axis
   scale_x_discrete(limits = rev(levels(reorder(query_4$supplier_name, query_4$delivery_time)))) +  # Sort in ascending order
-  labs(title = "Average Delivery Time for Top 5 Delivery Suppliers",
+  labs(title = "Avg. Delivery Time for Top 5 Delivery Suppliers",
        x = "Supplier Name",
        y = "Average Delivery Time (Days)") +
   theme_minimal() +
@@ -1269,11 +1285,7 @@ ggplot(query_4, aes(x = reorder(supplier_name, delivery_time),
 
 The bar chart displays the average delivery time for the five leading suppliers. Cummings Inc, Luettgen−Oberbrunner and Wolf−Balistrer have the fastest delivery time while the other two suppliers have over 2 days for delivery.
 
-<<<<<<< HEAD
-**5. Top 20 Average Spending across customers**
-=======
-5.  Top 20 Customers based on Average Spending 
->>>>>>> 0ce7d51ab8a3a244bfbefc823e513dcb0eb23e0b
+**5. Top 20 Customers - Average Spending**
 
 ```{r}
 
@@ -1298,7 +1310,7 @@ ggplot(query_5, aes(x = reorder(customer_name, avg_amount),
                     y = avg_amount, fill = avg_amount)) +
   geom_bar(stat = "identity") +
   coord_flip() +
-  labs(title = "Top 20 Average Spending Across Customers",
+  labs(title = "Top 20 Customers - Average Spending",
        x = "Customer",
        y = "Average Spending") +
   theme_minimal() +
@@ -1306,6 +1318,7 @@ ggplot(query_5, aes(x = reorder(customer_name, avg_amount),
         axis.title.y = element_text(face = "bold"),
         plot.title = element_text(hjust = 0.5, face = "bold"),
         legend.position = "none")
+
 ```
 
 Among the top 20 customers, Drusi Meijer is significantly leading, with average spending over £5000 indicating high-value transactions or frequent purchases. This suggests a potential segment of premium customers who contribute substantially to sales revenue. 
@@ -1360,7 +1373,7 @@ query_7 <- dbGetQuery(my_connection,
 ggplot(query_7,aes(x=as.Date(date),y=total_order,group=1))+
       geom_point(stat="identity")+
       geom_line(stat="identity")+
-      labs(x="Date",y="Total Number of Order")+
+      labs(x="Date",y="Daily Average Orders")+
         theme(axis.text.x=element_text(angle=35))
 ```
 
