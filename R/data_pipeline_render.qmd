@@ -1109,6 +1109,8 @@ ggplot(query_1, aes(x = reorder(product_name, total_purchase), y = total_purchas
         legend.text = element_text(size = 10))
 ```
 
+The bar chart shows the top 10 products by total sales amount. Leading the chart, the ‘ProEdit Graphic Tablet 10x6’ and the ‘Garmin in Reach Mini Satellite Communicator’ indicate strong sales, suggesting high consumer demand. The diversity of products, including computers, groceries, and other items, reflects varied consumer interests and potential market segments for focus.
+
 2. Top 5 Categories (Quantity)
 
 ```{r}
@@ -1139,6 +1141,8 @@ ggplot(query_2, aes(x = reorder(category, total_purchase), y = total_purchase, f
         legend.text = element_text(size = 10))
 
 ```
+
+This bar chart depicts the top five product categories ranked by quantity sold. Beauty products lead, indicating high customer demand, followed by toys, which may suggest popularity or a large customer base for these items.
 
 3. Top 3 Products across categories (Total Amount)
 
@@ -1190,6 +1194,8 @@ ggplot(query_3, aes(x = reorder(product_name, total_amount), y = total_amount, f
 
 ```
 
+According to this bar chart, the ‘InifinityPad Tablets 12.9 Pro’ leads significantly, meaning a strong market preference. The ‘Traeger Pro 575 Wood Pellet Grill (Traeger)’ and the ‘CodeMaster Development Laptop C9’ follow, suggesting diverse consumer interests or needs in technology and outdoor categories.
+
 4. Average delivery time for orders across top 5 delivery suppliers
 
 ```{r}
@@ -1220,6 +1226,8 @@ ggplot(query_4, aes(x = reorder(supplier_name, delivery_time), y = delivery_time
   theme(legend.position = "none")
 
 ```
+
+The bar chart displays the average delivery time for the five leading suppliers. Prohaska Inc. and Denesik and Sons have the longest delivery time while the other three suppliers have over 10 days for delivery, potentially suggesting an inefficiency issue.
 
 5. Top 20 Average Spending across customers
 
