@@ -5,6 +5,7 @@ format:
     number-sections: true
     colorlinks: true
 editor_options: 
+  chunk_output_type: console
 chunk_output_type: console
 ---
 
@@ -1227,7 +1228,7 @@ ggplot(query_4, aes(x = reorder(supplier_name, delivery_time), y = delivery_time
 
 ```
 
-The bar chart displays the average delivery time for the five leading suppliers. Prohaska Inc. and Denesik and Sons have the longest delivery time while the other three suppliers have over 10 days for delivery, potentially suggesting an inefficiency issue.
+The bar chart displays the average delivery time for the five leading suppliers. Lueilwitz Inc. and Jakubowski LLC have the longest delivery time while the other three suppliers have over 2 days for delivery, potentially suggesting an inefficiency issue.
 
 5. Top 20 Average Spending across customers
 
