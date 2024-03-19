@@ -25,7 +25,7 @@ jobs:
 
       - name: Install R dependencies
         run: |
-          Rscript -e 'install.packages(c("dplyr","readr","RSQLite","lubridate","rmarkdown","DBI"))'
+          Rscript -e 'install.packages(c("dplyr","readr","RSQLite","lubridate","rmarkdown","DBI","kableExtra"))'
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
