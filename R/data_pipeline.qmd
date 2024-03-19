@@ -1023,7 +1023,7 @@ ggplot(query_5, aes(x = reorder(customer_name, avg_amount), y = avg_amount, fill
         legend.position = "none")
 ```
 
-6. Top 20 cancelled orders for which category
+6. Top 5 categories with most cancellations
 
 ```{r}
 
