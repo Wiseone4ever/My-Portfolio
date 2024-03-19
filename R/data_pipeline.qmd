@@ -952,7 +952,7 @@ ggplot(query_3, aes(x = reorder(product_name, total_amount), y = total_amount, f
 
 ```
 
-4. Average delivery time for orders across top 5 delivery suppliers
+4. Average delivery time for orders across the 5 slowest delivery suppliers
 
 This code acts as a tool to analyse the efficiency of the shipping process. It focuses specifically on shipments marked as "delivered", linking them back to the suppliers who provided the products, relevant order details, and the shipment information itself. The code then calculates the average time it takes each supplier's products to be delivered from the moment they're dispatched to when they reach the customer. Finally, it ranks the suppliers based on their average delivery times, highlighting the top 5 suppliers with the slowest deliveries. This helps to identify potential areas for improvement within your supply chain.
 
