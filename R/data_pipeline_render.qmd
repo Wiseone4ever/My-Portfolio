@@ -1310,11 +1310,7 @@ ggplot(query_5, aes(x = reorder(customer_name, avg_amount),
 
 Among the top 20 customers, Drusi Meijer is significantly leading, with average spending over £5000 indicating high-value transactions or frequent purchases. This suggests a potential segment of premium customers who contribute substantially to sales revenue. 
 
-<<<<<<< HEAD
 **6. Top 5 Categories with the Most Cancellations**
-=======
-6. Top 5 Categories with the Most Cancellations
->>>>>>> 0ce7d51ab8a3a244bfbefc823e513dcb0eb23e0b
 
 ```{r}
 
