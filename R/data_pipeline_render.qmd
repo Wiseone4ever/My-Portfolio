@@ -1269,7 +1269,11 @@ ggplot(query_4, aes(x = reorder(supplier_name, delivery_time),
 
 The bar chart displays the average delivery time for the five leading suppliers. Cummings Inc, Luettgen−Oberbrunner and Wolf−Balistrer have the fastest delivery time while the other two suppliers have over 2 days for delivery.
 
+<<<<<<< HEAD
 **5. Top 20 Average Spending across customers**
+=======
+5.  Top 20 Customers based on Average Spending 
+>>>>>>> 0ce7d51ab8a3a244bfbefc823e513dcb0eb23e0b
 
 ```{r}
 
@@ -1306,7 +1310,11 @@ ggplot(query_5, aes(x = reorder(customer_name, avg_amount),
 
 Among the top 20 customers, Drusi Meijer is significantly leading, with average spending over £5000 indicating high-value transactions or frequent purchases. This suggests a potential segment of premium customers who contribute substantially to sales revenue. 
 
+<<<<<<< HEAD
 **6. Top 5 Categories with the Most Cancellations**
+=======
+6. Top 5 Categories with the Most Cancellations
+>>>>>>> 0ce7d51ab8a3a244bfbefc823e513dcb0eb23e0b
 
 ```{r}
 
@@ -1340,7 +1348,6 @@ The bar plot reveals that the toy category has the highest number of cancelled o
 **7. Average number of orders across time**
 
 ```{r}
-
 query_7 <- dbGetQuery(my_connection,
            "SELECT
               order_timestamp as date,
