@@ -956,7 +956,7 @@ ggplot(query_3, aes(x = reorder(product_name, total_amount), y = total_amount, f
 
 ```{r}
 
-# Define the SQL query for average delivery time for orders across top 5 delivery suppliers.
+# Define the SQL query for average delivery time for orders across top 5 delivery suppliers
 query_4 <- dbGetQuery(my_connection,
            "SELECT 
                sup.supplier_id,
